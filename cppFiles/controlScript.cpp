@@ -13,7 +13,6 @@
 // Declaring all functions
 void steer(int deg);
 int calcDeg();
-int timeToTurn(int velocity, int distance);
 
 // Declaring global variables
 AnalogIn accelerometer(p20);
@@ -47,8 +46,4 @@ int calcDeg () {
 	// take in cam data and calculate degrees
 
 	return degrees;
-}
-
-int timeToTurn (int velocity, int distance) {
-	return (distance / velocity) * 1000;
 }
