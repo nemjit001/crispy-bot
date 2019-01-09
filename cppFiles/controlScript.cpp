@@ -1,13 +1,12 @@
-#include <iostream>
+#include "mbed.h"
 #include <cstdlib>
-#include "physcom.h"
 
-int main () {
+int main() {
 	try {
-		// write code mah dudes
+	// write some code
 	}
 	catch (std::runtime_error& excpt) {
-		std::cout << excpt.what();
+		std::cout << "Runtime Error: " << excpt.what() << std::endl;
 	}
-	return 0;
+    return 0;
 }
