@@ -7,6 +7,7 @@
  * based on velocity calc time needed before turning?
  * write camera function
  * write driving function
+ * find out which pins are needed for controlling servo and motors
  *
  */
 
@@ -15,11 +16,10 @@ void steer(int deg);
 int calcDeg();
 
 // Declaring global variables
-AnalogIn accelerometer(p20);
 serial terminal(USBTX, USBRX);
+int carSpeed = 0;
 
 int main() {
-	int speed = 0;
 	try {
 		while (true) {
 			/* write drive chain */
