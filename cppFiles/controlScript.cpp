@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include "physcom.h"
 
 int main () {
 	try {
