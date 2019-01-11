@@ -14,7 +14,7 @@
 
 
 // Defining servo coefficients
-const int KP = 50;             // This is the Proportional Coefficient | Check this value and edit appropriately
+const int KP = 50;				// This is the Proportional Coefficient | Check this value and edit appropriately
 const int KDP = 25;             // This is the Differential Coefficient | Check this value and edit appropriately
 
 // Declaring used functions
@@ -60,11 +60,11 @@ int main() {
 	}
 
 	MCG_C1 &= ~MCG_C1_CLKS_MASK;    // switch CLKS mux to select the PLL as MCGCLKOUT   
-	for (int i = 0; i < 2000; i++)  // Wait for clock status bits to update
+	for (int i = 0; i < 2000; i++) {}  // Wait for clock status bits to update
 	// now in PEE mode, core and system clock 48 MHz, bus and flash clock 24 MHz
 
 	// Turning on all port clocks
-		SIM_SCGC5 = SIM_SCGC5_PORTA_MASK | SIM_SCGC5_PORTB_MASK | SIM_SCGC5_PORTC_MASK | SIM_SCGC5_PORTD_MASK | SIM_SCGC5_PORTE_MASK;
+	SIM_SCGC5 = SIM_SCGC5_PORTA_MASK | SIM_SCGC5_PORTB_MASK | SIM_SCGC5_PORTC_MASK | SIM_SCGC5_PORTD_MASK | SIM_SCGC5_PORTE_MASK;
 
 	// Turning on all TPM clocks
 	SIM_SCGC6 |= SIM_SCGC6_TPM0_MASK | SIM_SCGC6_TPM1_MASK | SIM_SCGC6_TPM2_MASK;
