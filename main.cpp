@@ -56,6 +56,7 @@ float getMid(){
 
 void setWheels(){
     float KP, KDP, mid = getMid(), prev_diff, diff;
+    MW_Servo servo(0);
 
     KP = 50;
     KDP = 25;

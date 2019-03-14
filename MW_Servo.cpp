@@ -54,7 +54,7 @@ void MW_Servo::setAngle(float angleInDeg) {
 
     this->angle = angleInDeg;
 
-    this->Servo.pulsewidth_us = ((( 500 * ( angleInDeg / 45000000 ) ) + 1275));
+    this->Servo->pulsewidth_ms(( 0.5 * ( angleInDeg / 45000000 ) ) + 1275);
 }
 
 float MW_Servo::getAngle() {

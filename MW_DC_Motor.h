@@ -1,49 +1,36 @@
-#include "MW_Camera.h"
-#include "MW_Servo.h"
-#include "MW_DC_Motor.h"
+#ifndef _MW_DC_MOTOR_H
+#define _MW_DC_MOTOR_H
 
-DigitalOut red(LED_RED);
-DigitalOut green(LED_GREEN);
-DigitalOut blue(LED_BLUE);
+#include "mbed.h"
 
-MW_DC_Motor motorA = MW_DC_Motor('A');
-MW_DC_Motor motorB = MW_DC_Motor('B');
+class MW_DC_Motor
+{
 
-MW_Servo servo = MW_Servo(0); //Might need to add min and max angle if error!!!!
-
-MW_Camera camera = MW_Camera(0);
-
-uint16_t* cameraDataVector = new uint16_t[128];
-
-int main(){
-    camera.setExposureTime(100);
-    motorA.setSpeed(0.1);
-    motorB.setSpeed(-0.1);
-
+public:
+    // Constructor and Destructor
+    ~MW_DC_Motor();
+    MW_DC_Motor(char motorLetter);
     
+    // initialize pwm signals to 240us period and 0% duty cycle
+    void initMotorInput(PwmOut* motorIn);
+    
+    // accessor methods
+    void  setSpeed(float speed);    // Set the speed of the motor (-1 to 1)
+    float getSpeed();               // Get the speed of the motor
 
-    while(true){
-        camera.updateCameraImage();
-        camera.getCameraImage(cameraDataVector);
+    void enableHbridge();           // Enable BOTH motors to run
+    void disableHbridge();          // Disable BOTH motors from running
 
-        for(int i = 0; i < 128; ++i){
-            if(cameraDataVector[i] > 40000){
-                red = 1;
-                green = 0;
-                blue = 0;   
-            }else if(cameraDataVector[i] > 2000 && cameraDataVector[i] < 40000){
-                red = 0;
-                green = 0;
-                blue = 1; 
-            }else if(cameraDataVector[i] < 2000){
-                red = 0;
-                green = 1;
-                blue = 0; 
-            }else{
-                red = 0;
-                green = 0;
-                blue = 0;   
-            }
-        }
-    }
-}
+    /**  Shorthand for the accessor methods */
+    MW_DC_Motor& operator= (float speed);
+    MW_DC_Motor& operator= (MW_DC_Motor& rhs);
+    operator float();
+
+private:
+    // PwmOut object which drive the motor
+    PwmOut* motorIn1;            // PWM signal to drive the H-Bridge In1
+    PwmOut* motorIn2;            // PWM signal to drive the H-Bridge In2
+    static DigitalOut hBridgeEN; // GPIO pin to enable/disable the H-Bridge
+};
+
+#endif
