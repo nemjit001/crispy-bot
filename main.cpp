@@ -2,8 +2,12 @@
 #include "MW_Servo.h"
 #include "MW_DC_Motor.h"
 
+#define SPEED 0.2
+
 MW_DC_Motor motorA = MW_DC_Motor('A');
 MW_DC_Motor motorB = MW_DC_Motor('B');
+MW_Servo servo(0);
+Serial terminal(USBRX, USBTX);
 
 
 MW_Camera camera = MW_Camera(0);
@@ -11,11 +15,6 @@ MW_Camera camera = MW_Camera(0);
 uint16_t* cameraDataVector;
 int threshold;
 float prev_mid = 64;
-
-void updateCamData(){
-    camera.updateCameraImage();
-    camera.getCameraImage(cameraDataVector);
-}
 
 float getMid(){
     int firstEdge = 1, secEdge = 128, mean;
@@ -56,7 +55,6 @@ float getMid(){
 
 void setWheels(){
     float KP, KDP, mid = getMid(), prev_diff, diff;
-    MW_Servo servo(0);
 
     KP = 50;
     KDP = 25;
@@ -68,29 +66,33 @@ void setWheels(){
     int kp = KP;
     int kdp = KDP;
     int servo_val = (kp * diff) + (kdp * (diff - prev_diff));
-   
-    servo_val = servo_val / 10;
-
-    servo_val /= 100;
 
     servo.setAngle(servo_val);
+    wait_ms(50);
+}
+
+void updateCamData(){
+    camera.updateCameraImage();
+    camera.getCameraImage(cameraDataVector);
 }
 
 int main(){
     camera.setExposureTime(100);
-    motorA.setSpeed(0.1);
-    motorB.setSpeed(0.1);
+    motorA.setSpeed(SPEED);
+    motorB.setSpeed(-SPEED);
 
     PwmOut servo = PwmOut(PTA12);
 
     servo.period(0.02f);
     
-    while(true){
+    for(;;){
         servo.pulsewidth_us(1380);
         wait(3);
         servo.pulsewidth_us(1220);
         wait(3);
         servo.pulsewidth_us(1060);
         wait(3);
+        //updateCamData();
+//        setWheels();
     }
 }
