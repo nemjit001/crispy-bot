@@ -1,6 +1,7 @@
 #include "MW_DC_Motor.h"
 #include "mbed.h"
 
+
 DigitalOut MW_DC_Motor::hBridgeEN(PTE21);
 
 MW_DC_Motor::~MW_DC_Motor() {
@@ -35,7 +36,7 @@ MW_DC_Motor::MW_DC_Motor(char motorLetter) {
 }
 
 void MW_DC_Motor::initMotorInput(PwmOut* motorIn) {
-    motorIn->period( 1.0 / 4166);
+    motorIn->period(1.0/4166); //MW_TPM0_FREQUENCY
     motorIn->write(0.0);
 }
 
@@ -80,3 +81,4 @@ MW_DC_Motor& MW_DC_Motor::operator= (MW_DC_Motor& rhs) {
 MW_DC_Motor::operator float() {
     return getSpeed();
 }
+

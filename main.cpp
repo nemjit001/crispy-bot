@@ -1,23 +1,14 @@
+#include "mbed.h"
 #include "MW_Camera.h"
-#include "MW_Servo.h"
 #include "MW_DC_Motor.h"
 
-#define SPEED 0.2
+Serial terminal(USBTX, USBRX); // tx, rx
+int prev_mid = 64;
+PwmOut servo = PwmOut(PTA12);
 
-MW_DC_Motor motorA = MW_DC_Motor('A');
-MW_DC_Motor motorB = MW_DC_Motor('B');
-MW_Servo servo(0);
-Serial terminal(USBRX, USBTX);
-
-
-MW_Camera camera = MW_Camera(0);
-
-uint16_t* cameraDataVector;
-int threshold;
-float prev_mid = 64;
-
-float getMid(){
-    int firstEdge = 1, secEdge = 128, mean;
+int getMid(uint16_t* cameraDataVector){
+    int firstEdge = 1, secEdge = 128, mean; 
+    float threshold;
 
     for(int i = 40; i < 80; ++i){
         mean += cameraDataVector[i];
@@ -25,11 +16,12 @@ float getMid(){
 
     mean = mean / 40;
     threshold = mean * 0.91;
+    terminal.printf("Threshold: %f\n", threshold);
 
     //Setting first edge
     for(int i = 64; i > 0; --i){
         if(cameraDataVector[i] < threshold){
-            firstEdge = cameraDataVector[i];
+            firstEdge = i;
             break;
         }
     }
@@ -37,14 +29,16 @@ float getMid(){
     //Setting second edge
     for(int i = 64; i < 128; ++i){
         if(cameraDataVector[i] < threshold){
-            secEdge = cameraDataVector[i];
+            secEdge = i;
             break;
         }
     }
 
     if((firstEdge > 1) && (secEdge < 128)){
+        int temp = ((firstEdge + secEdge) / 2);
         return ((firstEdge + secEdge) / 2);
     }else if(firstEdge < 3){
+        
         return firstEdge + 50;
     }else if(secEdge > 124){
         return secEdge - 50;
@@ -53,46 +47,55 @@ float getMid(){
     }
 }
 
-void setWheels(){
-    float KP, KDP, mid = getMid(), prev_diff, diff;
+int setWheels(int mid, int prev_mid){
+   int serv_neutral = 1210, diff;
+   float position = serv_neutral;
+   terminal.printf("getMid: %d", mid);
+   
+   diff = 64 - mid;
+   terminal.printf("diff: %d", diff);
+   if(diff != 0){
+        position = serv_neutral + (diff * 2.5);
+   }else{
+        position = serv_neutral;
+    }
+    
+    if(position > 1370){
+        position = 1370;
+    }else if(position < 1050){
+        position = 1050;
+    }
+        
+    terminal.printf("position: %d", position);
+    servo.pulsewidth_us(position);
 
-    KP = 50;
-    KDP = 25;
-    
-    diff = mid - 64;
-    prev_diff = prev_mid - 64;
-    
-    
-    int kp = KP;
-    int kdp = KDP;
-    int servo_val = (kp * diff) + (kdp * (diff - prev_diff));
-
-    servo.setAngle(servo_val);
+   return mid;
 }
 
-void updateCamData(){
-    camera.updateCameraImage();
-    camera.getCameraImage(cameraDataVector);
-}
 
 int main(){
-    camera.setExposureTime(100);
-    motorA.setSpeed(SPEED);
-    motorB.setSpeed(-SPEED);
-
-    PwmOut servo = PwmOut(PTA12);
-
+    uint16_t cameraDataVector[128];
+    int prev_mid = 64;
+    MW_Camera camera = MW_Camera(0);
     servo.period(0.02f);
+    MW_DC_Motor motorA = MW_DC_Motor('A');
+    MW_DC_Motor motorB = MW_DC_Motor('B');
     
-    for(;;){
-//        servo.pulsewidth_us(1380);
-//        wait(3);
-//        servo.pulsewidth_us(1220);
-//        wait(3);
-//        servo.pulsewidth_us(1060);
-//        wait(3);
-        updateCamData();
-        setWheels();
-        wait_ms(50);
+    motorA.setSpeed(0.0);
+    motorB.setSpeed(0.0);
+    
+    while(true){
+        camera.updateCameraImage();
+        camera.getCameraImage(cameraDataVector);
+        prev_mid = setWheels(getMid(cameraDataVector), prev_mid);
+        //setWheels(servo, );
+        //setWheels(servo, );
+        /*for(int i = 0; i < 128; ++i){
+             terminal.printf("|%d|", cameraDataVector[i]);  
+        }*/
+        wait(1);  
     }
+    
+    
+    return 0;   
 }
