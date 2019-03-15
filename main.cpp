@@ -68,7 +68,6 @@ void setWheels(){
     int servo_val = (kp * diff) + (kdp * (diff - prev_diff));
 
     servo.setAngle(servo_val);
-    wait_ms(50);
 }
 
 void updateCamData(){
@@ -86,13 +85,14 @@ int main(){
     servo.period(0.02f);
     
     for(;;){
-        servo.pulsewidth_us(1380);
-        wait(3);
-        servo.pulsewidth_us(1220);
-        wait(3);
-        servo.pulsewidth_us(1060);
-        wait(3);
-        //updateCamData();
-//        setWheels();
+//        servo.pulsewidth_us(1380);
+//        wait(3);
+//        servo.pulsewidth_us(1220);
+//        wait(3);
+//        servo.pulsewidth_us(1060);
+//        wait(3);
+        updateCamData();
+        setWheels();
+        wait_ms(50);
     }
 }
