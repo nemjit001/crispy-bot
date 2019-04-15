@@ -18,7 +18,7 @@ int getMid(uint16_t* cameraDataVector){
 
     mean = mean / 40;
     threshold = mean * 0.71;
-    terminal.printf("Threshold: %f\n", threshold);
+    //terminal.printf("Threshold: %f\n", threshold);
 
     //Setting first edge
     for(int i = 64; i > 0; --i){
@@ -36,8 +36,9 @@ int getMid(uint16_t* cameraDataVector){
         }
     }
     
+    //terminal.printf("L: %d R: %d\r\n", firstEdge, secEdge);
+    
     if((firstEdge >= 2) && (secEdge <= 127)){
-        
         return ((firstEdge + secEdge) / 2);
     }else if ((firstEdge < 2) && (secEdge > 127)){
         return prev_mid;
@@ -48,31 +49,34 @@ int getMid(uint16_t* cameraDataVector){
     }
 }
 
-int setWheels(int mid, int prev_mid){
-   int serv_neutral = 1210, diff;
-   terminal.printf("getMid: %d", mid);
-       
-   diff = 64 - mid;
-   terminal.printf("diff: %d", diff);
+int setWheels(int mid){
+    int neutral = 1210, dist = 150, pos;
+    float offset, magic = 1.5;
     
-    if(serv_neutral + (diff * 10.125) > 1370){
-        servo.pulsewidth_us(1370);
-    }else if(serv_neutral + (diff * 10.125) < 1050){
-        servo.pulsewidth_us(1050);
-    }else{
-        servo.pulsewidth_us(serv_neutral + (diff * 10.125));
-    }
+    //terminal.printf("mid: %d\r\n", mid);
+    
+    offset = float(mid - 64) / 128.0;
+    
+    pos = neutral + offset * float(dist) * magic;
+    
+    terminal.printf("pos: %d", pos);
+    
+    if(pos > neutral + dist) pos = neutral + dist;
+    else if(pos < neutral - dist) pos = neutral - dist;
+    
+    servo.pulsewidth_us(pos);
 
-   return mid;
+    return mid;
 }
 
 
 int main(){
     uint16_t cameraDataVector[128];
-    int prev_mid = 64;
+    int prev_mid = 64, mid = 64;
     MW_Camera camera = MW_Camera(0);
     servo.period(0.02f);
     
+    camera.setExposureTime(10);
     
     motorA.setSpeed(0.1);
     motorB.setSpeed(-0.1);
@@ -88,9 +92,11 @@ int main(){
         }
         camera.updateCameraImage();
         camera.getCameraImage(cameraDataVector);
-        prev_mid = setWheels(getMid(cameraDataVector), prev_mid);
+        wait_ms(100);
+        mid = getMid(cameraDataVector);
+        mid = 34;
+        prev_mid = setWheels(mid);
     }
-    
-    
+
     return 0;   
 }
