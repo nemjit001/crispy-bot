@@ -18,7 +18,7 @@ int getMid(uint16_t* cameraDataVector, int prev_mid){
 
     mean = mean / 40;
     threshold = mean * 0.71;
-    //terminal.printf("Threshold: %d\r\n", threshold);
+    //terminal.printf("Threshold: %f\n", threshold);
 
     //Setting first edge
     for(int i = 64; i > 0; --i){
@@ -47,12 +47,11 @@ int setWheels(int mid){
     if (abs(offset) > min) offset = 0;
     
     pos = neutral + offset * float(dist) * magic;
-    
+
     if(pos > neutral + dist) pos = neutral + dist;
     else if(pos < neutral - dist) pos = neutral - dist;
     
     servo.pulsewidth_us(pos);
-
     return mid;
 }
 
