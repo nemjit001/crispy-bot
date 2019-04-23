@@ -7,4 +7,4 @@ We are the team 'The Boys' and we consist of three members:
 - Stijn Winter
 - Tijmen Verhoef
 
-This project consists of low-level c code for controlling the alamak robot used in the NXP competition
+This project consists of c++ code for controlling the alamak robot used in the NXP competition.
