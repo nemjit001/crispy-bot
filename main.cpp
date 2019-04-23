@@ -6,7 +6,7 @@
 
 Serial terminal(USBTX, USBRX); // gebruikt usb connectie voor screen
 int threshold;
-float diff = 2000;
+float diff = 8000;
 PwmOut servo = PwmOut(PTA12);
 MW_DC_Motor motorA = MW_DC_Motor('A');
 MW_DC_Motor motorB = MW_DC_Motor('B');
@@ -20,7 +20,7 @@ float getMid(uint16_t* cameraDataVector){
     }
 
     mean /= 40.0;
-    threshold = mean * 0.071;
+    threshold = mean * 0.25;
     terminal.printf("%f\r\n", mean);
 
     //Setting first edge
