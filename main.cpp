@@ -2,7 +2,7 @@
 #include "MW_Camera.h"
 #include "MW_DC_Motor.h"
 
-#include <sstream>
+#include <string.h>
 
 #define SPEED 0.1
 
@@ -69,6 +69,13 @@ void setWheels(float mid){
 
 
 void drawCam(uint16_t* cameraDataVector) {
+    std::string dataString;
+    for (int i = 0; i < 128; i++) {
+        dataString += cameraDataVector[i] + ",";
+    }
+    terminal.printf("%s\r\n", dataString);
+
+    /*
     std::stringstream ss;
     std::string temp = "";
     
@@ -78,6 +85,7 @@ void drawCam(uint16_t* cameraDataVector) {
     
     temp += ss.str();
     terminal.printf("%s\r\n", temp.c_str());
+    */
 }
 
 
