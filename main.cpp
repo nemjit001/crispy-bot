@@ -2,17 +2,19 @@
 #include "MW_Camera.h"
 #include "MW_DC_Motor.h"
 
-#define SPEED 0.125
+#include <sstream>
+
+#define SPEED 0.1
 
 Serial terminal(USBTX, USBRX); // gebruikt usb connectie voor screen
 int threshold;
-float diff = 8000;
+float diff = 2000;
 PwmOut servo = PwmOut(PTA12);
 MW_DC_Motor motorA = MW_DC_Motor('A');
 MW_DC_Motor motorB = MW_DC_Motor('B');
 
 float getMid(uint16_t* cameraDataVector){
-    int firstEdge = 0, secEdge = 127;
+    int firstEdge, secEdge, max;
     float mean = 0;
 
     for(int i = 40; i < 80; ++i){
@@ -20,24 +22,27 @@ float getMid(uint16_t* cameraDataVector){
     }
 
     mean /= 40.0;
-    threshold = mean * 0.25;
-    terminal.printf("%f\r\n", mean);
+    threshold = diff;
 
     //Setting first edge
+    max = 0;
     for(int i = 64; i > 0; --i){
-        if(abs(cameraDataVector[i] - cameraDataVector[i - 1]) > threshold){
+        if(abs(cameraDataVector[i] - cameraDataVector[i - 1]) > max){
+            max = abs(cameraDataVector[i] - cameraDataVector[i - 1]);
             firstEdge = i;
-            break;
         }
     }
+    if (max < threshold) firstEdge = 0;
 
+    max = 0;
     //Setting second edge
     for(int i = 64; i < 127; ++i){
-        if(abs(cameraDataVector[i] - cameraDataVector[i + 1]) > threshold){
+        if(abs(cameraDataVector[i] - cameraDataVector[i + 1]) > max){
+            max = abs(cameraDataVector[i] - cameraDataVector[i - 1]);
             secEdge = i;
-            break;
         }
     }
+    if (max < threshold) secEdge = 127;
     
     return (firstEdge == 0 && secEdge == 127) ? 64.0 : ((firstEdge + secEdge) / 2.0);
 }
@@ -64,11 +69,15 @@ void setWheels(float mid){
 
 
 void drawCam(uint16_t* cameraDataVector) {
+    std::stringstream ss;
+    std::string temp = "";
+    
     for (int i = 0; i < 128; i++) {
-        if (cameraDataVector[i] < threshold) terminal.printf("#");
-        else terminal.printf("-");
+        ss << cameraDataVector[i] << ',';
     }
-    terminal.printf("\r\n");
+    
+    temp += ss.str();
+    terminal.printf("%s\r\n", temp.c_str());
 }
 
 
