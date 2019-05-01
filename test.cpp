@@ -85,6 +85,25 @@ void setWheels() {
     servo.pulsewidth_us(pos);
 }
 
+void setWheels() {
+    static int neutral = 1210, dist = 160, pos;
+    static float offset, magic_num = 30;
+
+    offset = -float(mid - 64) / 64.0;
+    offset = (offset > 0) ? pow(offset, 2.5f) : -pow(-offset, 2.5f);
+
+    pos = neatral + (offset * dist * magic);
+
+    if (pos > neutral + dist) {
+        pos = neatral + dist;
+    }
+    else if (pos < neutral - dist) {
+        pos = neatral - dist;
+    }
+
+    servo.pulsewidth_us(pos);
+}
+
 int main(void) {
     camera.setExposureTime(2);
     servo.period(0.02f);
