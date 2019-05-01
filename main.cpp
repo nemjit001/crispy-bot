@@ -38,7 +38,7 @@ float getMid(uint16_t* cameraDataVector){
     //Setting second edge
     for(int i = 64; i < 127; ++i){
         if(abs(cameraDataVector[i] - cameraDataVector[i + 1]) > max){
-            max = abs(cameraDataVector[i] - cameraDataVector[i - 1]);
+            max = abs(cameraDataVector[i] - cameraDataVector[i + 1]);
             secEdge = i;
         }
     }
