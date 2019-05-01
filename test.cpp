@@ -4,17 +4,24 @@
 
 #define SPEED 1
 
-// All vars should be global, no passing to functions
+// All vars should be global, no passing to functions (is lichter op het ram, ipv de hele tijd redeclaren blijven ze vast staan)
 Serial terminal(USBTX, USBRX);
-int threshold = 0; // Let op -> threshold wordt nog niet gebruikt in berekening, init als 0
-float diff = 2000.00 // Let op -> diff is een placeholder voor threshold
 PwmOut servo = PwmOut(PTA12);
-MW_DC_Motor motorA = MW_DC_Motor('A'), motorB = MW_DC_Motor('B');
-int firstEdge = 0, secEdge = 127, max_diff = 0;
+MW_DC_Motor motorA = MW_DC_Motor('A');
+MW_DC_Motor motorB = MW_DC_Motor('B');
+MW_Camera camera = MW_Camera(0);
+bool stopped = false; // Geeft aan of de auto moet stoppen
+int firstEdge = 0;
+int secEdge = 127;
+int max_diff = 0;
+int threshold = 0; // Let op -> threshold wordt nog niet gebruikt in berekening, init als 0
+int mid = 64.0; // midden van de baan
 float sum = 0;
 float mean = 0;
+float diff = 2000.00; // Let op -> diff is een placeholder voor threshold
+uint16_t cameraDataVector[128]; // De vector met de gevonden camera waarden.
 
-float getMid() {
+void getMid() {
     sum = 0;
     mean = 0;
 
@@ -34,7 +41,7 @@ float getMid() {
             firstEdge = i;
         }
     }
-    if (max > threshold) {
+    if (max_diff > threshold) {
         firstEdge = 0;
     }
 
@@ -50,14 +57,46 @@ float getMid() {
         secEdge = 127;
     }
 
+    // return een waarde op basis van de (niet) gevonden edges
     if (firstEdge == 0 && secEdge == 127) {
-        return 64.0;
+        mid = 64.0;
     }
     else {
-        return (firstEdge + secEdge) / 2.0;
+        mid = (firstEdge + secEdge) / 2.0;
     }
 }
 
+void setWheels() {
+    static int neutral = 1210, dist = 160, pos;
+    static float offset, magic_num = 30;
+
+    offset = -float(mid - 64) / 64.0;
+    offset = (offset > 0) ? pow(offset, 2.5f) : -pow(-offset, 2.5f);
+
+    pos = neutral + (offset * dist * magic_num);
+
+    if (pos > neutral + dist) {
+        pos = neutral + dist;
+    }
+    else if (pos < neutral - dist) {
+        pos = neutral - dist;
+    }
+
+    servo.pulsewidth_us(pos);
+}
+
 int main(void) {
+    camera.setExposureTime(2);
+    servo.period(0.02f);
+    motorA.setSpeed(SPEED);
+    motorB.setSpeed(-SPEED);
+
+    while (!stopped) {
+        camera.updateCameraImage();
+        camera.getCameraImage(cameraDataVector);
+        getMid();
+        setWheels();
+    }
+
     return 0;
 }
