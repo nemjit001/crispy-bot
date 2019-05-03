@@ -18,7 +18,7 @@ int threshold = 0; // Let op -> threshold wordt nog niet gebruikt in berekening,
 int mid = 64.0; // midden van de baan
 float sum = 0;
 float mean = 0;
-float diff = 2000.00; // Let op -> diff is een placeholder voor threshold
+float diff = 2000; // Let op -> diff is een placeholder voor threshold
 uint16_t cameraDataVector[128]; // De vector met de gevonden camera waarden.
 
 void getMid() {
