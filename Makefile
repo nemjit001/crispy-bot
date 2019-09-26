@@ -49,6 +49,7 @@ PROJECT := NXP
 OBJECTS += MW_Camera/MW_Camera.o
 OBJECTS += MW_DC_Motor/MW_DC_Motor.o
 OBJECTS += NXPLogic/NXPLogic.o
+OBJECTS += Filter/Filter.o
 OBJECTS += main.o
 
  SYS_OBJECTS += mbed/TARGET_KL25Z/TOOLCHAIN_GCC_ARM/PeripheralPins.o
@@ -81,6 +82,7 @@ INCLUDE_PATHS += -I..//usr/src/mbed-sdk
 INCLUDE_PATHS += -I../MW_Camera
 INCLUDE_PATHS += -I../MW_DC_Motor
 INCLUDE_PATHS += -I../NXPLogic
+INCLUDE_PATHS += -I../Filter
 INCLUDE_PATHS += -I../mbed
 INCLUDE_PATHS += -I../mbed/TARGET_KL25Z/TOOLCHAIN_GCC_ARM
 INCLUDE_PATHS += -I../mbed/drivers

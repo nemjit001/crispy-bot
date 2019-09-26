@@ -3,6 +3,7 @@
 bool NXPLogic::step() {
     camera.updateCameraImage();
     camera.getCameraImage(camData);
+    filter.applyGaussianBlur(camData, camDataSize);
     mid = calcMid();
     setWheels();
 
@@ -15,8 +16,8 @@ int NXPLogic::calcMid() {
     firstEdge = findEdge(mid, 0);
     if (firstEdge == -1) firstEdge = 0;
 
-    secEdge = findEdge(mid, 127);
-    if (secEdge == -1) secEdge = 127;
+    secEdge = findEdge(mid, camDataSize);
+    if (secEdge == -1) secEdge = camDataSize;
 
     return ((firstEdge + secEdge) / 2);
 }

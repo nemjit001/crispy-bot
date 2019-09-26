@@ -3,7 +3,9 @@
 #include "mbed.h"
 #include "MW_Camera.h"
 #include "MW_DC_Motor.h"
+#include "Filter.h"
 
+#define CAMDATA_SIZE 128
 #define EXPOSURE_TIME 2
 #define SERVO_PERIOD 0.02
 #define SPEED 0.16
@@ -17,12 +19,15 @@ typedef struct steeringStruct {
 
 class NXPLogic {
 private:
-    uint16_t camData[128];
-    int mid = 64;
+    int camDataSize = CAMDATA_SIZE;
+    uint16_t camData[CAMDATA_SIZE];
+
     int threshold = THRESHOLD;
     float speed = SPEED;
+    int mid = camDataSize / 2;
 
     steeringStruct steering;
+    Filter filter = Filter();
 
     PwmOut servo = PwmOut(PTA12);
     MW_DC_Motor motorA = MW_DC_Motor('A');
