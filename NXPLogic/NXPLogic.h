@@ -8,13 +8,15 @@
 #define CAMDATA_SIZE 128
 #define EXPOSURE_TIME 2
 #define SERVO_PERIOD 0.02
+#define SERVO_MIN 500
+#define SERVO_MAX 2500
 #define SPEED 0.16
 #define THRESHOLD 4000
 #define DEBUG_FLAG false
 
 typedef struct steeringStruct {
-    int neutral = 1210;
-    int radius = 200;
+    int neutral = (SERVO_MIN + SERVO_MAX) / 2;
+    int radius = SERVO_MAX - SERVO_MIN;
 } steeringStruct;
 
 class NXPLogic {
