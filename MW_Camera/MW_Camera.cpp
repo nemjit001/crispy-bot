@@ -6,7 +6,7 @@
 #define LOW       0
 #define HIGH      1
 #define EXPOSURE_TIME_MAX 150U
-#define EXPOSURE_TIME_MIN   0U
+#define EXPOSURE_TIME_MIN   1U
 
 const PinName MW_Camera::cameraPinName[] = {PTC2, PTC1};
 const DigitalOut MW_Camera::SIPinName[]={PTB8,PTB10};
