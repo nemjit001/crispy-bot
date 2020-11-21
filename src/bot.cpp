@@ -1,12 +1,12 @@
 #include "Motor.h"
-#include "Servo.h"
+#include "pins.h"
 
 class Bot
 {
 private:
     Motor *LeftMotor;
     Motor *RightMotor;
-    Servo *SteeringServo;
+    PwmOut *SteeringServo;
 public:
     Bot();
     ~Bot();
@@ -14,9 +14,9 @@ public:
 
 Bot::Bot()
 {
-    this->LeftMotor = new Motor();
-    this->RightMotor = new Motor();
-    this->SteeringServo = new Servo();
+    this->LeftMotor = new Motor(MOTOR_A_1, MOTOR_A_2);
+    this->RightMotor = new Motor(MOTOR_B_1, MOTOR_B_2);
+    this->SteeringServo = new PwmOut(SERVO_PIN);
 }
 
 Bot::~Bot()
