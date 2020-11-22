@@ -20,7 +20,6 @@ public:
 
     void setSpeed(float speed);
     float getSpeed();
-    Motor& operator= (float speed);
     Motor& operator= (Motor &rhs);
     operator float();
 };

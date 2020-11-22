@@ -68,12 +68,6 @@ float Motor::getSpeed()
     return this->motorIn1->read() - this->motorIn2->read();
 }
 
-Motor& Motor::operator= (float speed)
-{
-    this->setSpeed(speed);
-    return *this;
-}
-
 Motor& Motor::operator= (Motor &rhs)
 {
     this->setSpeed(rhs.getSpeed());

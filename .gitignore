@@ -1,7 +1,7 @@
 __pycache__/
 BUILD/
 mbed-os/
+pixy2/
 .vscode/
 venv/
-bot
-mbed-os.lib
+*.lib
