@@ -1,1 +1,1 @@
-mbed-cli==1.10.5
+mbed-cli
