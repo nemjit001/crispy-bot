@@ -1,5 +1,5 @@
 obj/
 .vscode/
-crispy_bot
+*.elf
 *.bin
 *.hex
