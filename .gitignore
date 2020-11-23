@@ -1,7 +1,5 @@
-__pycache__/
-BUILD/
-mbed-os/
-pixy2/
+obj/
 .vscode/
-venv/
-*.lib
+crispy_bot
+*.bin
+*.hex
