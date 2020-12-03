@@ -2,7 +2,7 @@ SRCDIR=src
 OBJDIR=obj
 
 CC = arm-none-eabi-g++
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall -Werror -Wextra -Wpedantic
 LDLIBS = 
 TARGET = crispy_bot
 OBJCOPY = arm-none-eabi-objcopy
@@ -16,7 +16,8 @@ OBJ=$(filter-out $(SRCDIR)/$(TARGET).o, $(_OBJ))
 
 all: $(TARGET)
 
-flash:
+flash: all
+	@echo flashing to board
 
 $(TARGET): $(TARGET).elf
 
