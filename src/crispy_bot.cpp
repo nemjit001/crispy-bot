@@ -1,4 +1,3 @@
-#include "gpio.h"
 #include "Motor.h"
 #include "util.h"
 

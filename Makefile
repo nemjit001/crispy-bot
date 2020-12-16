@@ -8,9 +8,9 @@ TARGET = crispy_bot
 OBJCOPY = arm-none-eabi-objcopy
 
 SRCS=$(wildcard $(SRCDIR)/*.cpp)
-HDRS=$(wildcard $(SRCDIR)/*.cpp)
+HDRS=$(wildcard $(SRCDIR)/*.h)
 _OBJ=$(patsubst $(SRCDIR)/%, $(OBJDIR)/%, $(SRCS:.cpp=.o))
-OBJ=$(filter-out $(SRCDIR)/$(TARGET).o, $(_OBJ))
+OBJ=$(filter-out $(OBJDIR)/$(TARGET).o, $(_OBJ))
 
 .phony: all clean flash
 
