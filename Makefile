@@ -1,9 +1,10 @@
 SRCDIR=src
 OBJDIR=obj
+LIBDIR=lib
 
 CC = arm-none-eabi-g++
 CFLAGS = -Wall -Werror -Wextra -Wpedantic
-LDLIBS = 
+LDLIBS = -lpixy2
 TARGET = crispy_bot
 OBJCOPY = arm-none-eabi-objcopy
 
@@ -22,13 +23,13 @@ flash: all
 $(TARGET): $(TARGET).elf
 
 $(TARGET).elf: $(OBJ) $(OBJDIR)/$(TARGET).o
-	$(CC) --specs=nosys.specs $(CFLAGS) $(LDLIBS) -o $@ $^
+	$(CC) --specs=nosys.specs $(CFLAGS) -L$(LIBDIR) $(LDLIBS) -o $@ $^
 	$(OBJCOPY) -O binary $(TARGET).elf $(TARGET).bin
 	$(OBJCOPY) -O ihex $(TARGET).elf $(TARGET).hex
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	+@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
-	$(CC) --specs=nosys.specs -MMD $(CFLAGS) $(LDLIBS) -c -o $@ $<
+	$(CC) --specs=nosys.specs -MMD $(CFLAGS) -L$(LIBDIR) $(LDLIBS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJDIR)/* $(TARGET).elf $(TARGET).hex $(TARGET).bin
