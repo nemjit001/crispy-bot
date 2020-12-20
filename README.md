@@ -12,4 +12,4 @@ This project consists of c++ code for controlling the alamak robot used in the N
 
 ## Building and Setup
 
-To build the binary and hexfiles, run make.
+To build the binary and hexfiles, build.bat

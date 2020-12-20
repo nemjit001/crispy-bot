@@ -1,5 +1,3 @@
-obj/
-.vscode/
-*.elf
-*.bin
-*.hex
+.settings/
+Release/
+Debug/
