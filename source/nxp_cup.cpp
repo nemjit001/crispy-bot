@@ -68,81 +68,82 @@ extern "C"
 /* Pixy 2 */
 #include "Pixy/Pixy2SPI_SS.h"
 
+/* Own modules */
+#include "servo_module.h"
+
+#define _NORMAL_RUN		0b00000000
+#define _CHECK_BATTERY 	0b00000001
+#define _CHECK_SERVO 	0b00000010
+#define _CHECK_ENGINE	0b00000011 
+#define _PAUSE_ALL		0b00001000
+
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
-// Measuring speed and meaning
-static float sSpeedMotLeft;
-static float sSpeedMotRight;
-#define kSpeedTabSize 100
-static UInt16 sSpeedIndex;
-static float sSpeedTab[kSpeedTabSize][2];
-// Table containing the image (and various infos) of the
-// digital camera, the test board is used for the Labview app
-static UInt16 sImageTabTest[200];
-// Measurement of the accelerometer and the magnetometer
-static SRAWDATAEnum sAccel;   // in g
-static SRAWDATAEnum sMagneto; // in micro teslas
-//static UInt8 sAccelMagnetoStatus;
-static float sYaw;   // in degree
-static float sRoll;  // in degree
-static float sPitch; // in degree
+void leds_off()
+{
+	mLeds_Write(kMaskLed1, kLedOff);
+	mLeds_Write(kMaskLed2, kLedOff);
+	mLeds_Write(kMaskLed3, kLedOff);
+	mLeds_Write(kMaskLed4, kLedOff);
+}
 
-// Angular velocity of gyro in degrees
-static float sAngVel_X;
-static float sAngVel_Y;
-static float sAngVel_Z;
+void display_voltage(float voltage)
+{
+	mLeds_Write(kMaskLed1, kLedOn);
 
-// Measurement of motor current and battery voltage
-static float sIMotLeft;
-static float sIMotRight;
-static float sUBatt;
-static bool sFaultLeft;
-static bool sFaultRight;
+	if (voltage > 6)
+	{
+		mLeds_Write(kMaskLed2, kLedOn);
+	}
+	if (voltage > 6.9)
+	{
+		mLeds_Write(kMaskLed3, kLedOn);
+	}
+	else if (voltage > 7.32)
+	{
+		mLeds_Write(kMaskLed4, kLedOn);
+	}
+}
 
-// Distance measured by the LIDAR in mm
-static UInt8 sDistFront;
+void rotate_servo(servoModule *servo, float *duty)
+{
+	bool 	btn1 = mSwitch_ReadPushBut(kPushButSW1),
+			btn2 = mSwitch_ReadPushBut(kPushButSW2);
+
+	if (btn1 && btn2)
+	{
+		*duty = 0;
+		servo->setRotation(*duty);
+		return;
+	}
+
+	if (btn1)
+	{
+		*duty += 0.1;
+		if (*duty > 1)
+			*duty = 1;
+	}
+	else if (btn2)
+	{
+		*duty -= 0.1;
+		if (*duty < -1)
+			*duty = -1;
+	}
+
+	servo->setRotation(*duty);
+}
 
 uint8_t get_switch_state()
 {
 	return 0x0 |
-		mSwitch_ReadSwitch(kSw1) << 3 |
-		mSwitch_ReadSwitch(kSw2) << 2 |
-		mSwitch_ReadSwitch(kSw3) << 1 |
-		mSwitch_ReadSwitch(kSw4) << 0;
+	(mSwitch_ReadSwitch(kSw1) << 0) |
+	(mSwitch_ReadSwitch(kSw2) << 1) |
+	(mSwitch_ReadSwitch(kSw3) << 2) |
+	(mSwitch_ReadSwitch(kSw4) << 3);
 }
 
-/*
- * @brief   Application entry point.
- */
-int main(void)
+void board_device_setup()
 {
-
-	static UInt8 sPixelValMoy;
-	static bool sImageOk = false;
-	static Int16 sDly;
-	static UInt16 sIntTime = 25000;
-	Int32 aWakeIntMain;
-	Int8 aCharTab[50];
-	UInt32 i = 0;
-	bool aRet;
-	float aDuty = 0;
-
-	// Table containing the image (and various infos) of the digital camera
-	UInt8 aImageTab[200];
-	// Sensor value
-	SRAWDATAEnum aAccel;   // in g
-	SRAWDATAEnum aMagneto; // in micro teslas
-	float aYaw;			   // in degree
-	float aRoll;		   // in degree
-	float aPitch;		   // in degree
-	// Measuring speed and meaning
-	float aSpeedMotLeft;
-	float aSpeedMotRight;
-
-#if (kWithLidar)
-	UInt8 aDistFront;
-#endif
-
 	//--------------------------------------------------------------------
 	// Device and card setup
 	//--------------------------------------------------------------------
@@ -195,14 +196,59 @@ int main(void)
 	// UART 4 monitoring image
 	mRs232_Setup();
 	mRs232_Open();
+}
 
-	// set board switches as a number on startup
-	uint8_t switch_state = get_switch_state();
+/*
+ * @brief   Application entry point.
+ */
+int main(void)
+{
+	board_device_setup();
 
-	while(1)
+	// bitmask containing boardswitch state
+	static uint8_t switch_state = 0x0;
+	// main loop delay
+	static Int16 delay = 0;
+	static float battery_voltage = 0.0;
+
+	/* test vars */
+	float test_servo_duty = 0.0;
+	servoModule test_servo(servo1);
+
+	mDelay_ReStart(kPit1, delay, 300 / kPit1Period);
+
+	for (;;)
 	{
-		PRINTF("0x%x\r", switch_state);
+		if(!mDelay_IsDelayDone(kPit1, delay))
+			continue;
+		
+		mDelay_ReStart(kPit1, delay, 300 / kPit1Period);
+		leds_off();
+
 		switch_state = get_switch_state();
+		battery_voltage = mAd_Read(kUBatt);
+
+		switch (switch_state)
+		{
+		case _NORMAL_RUN:
+			/* regular run */
+			break;
+		case _CHECK_BATTERY:
+			display_voltage(battery_voltage);
+			break;
+		case _CHECK_SERVO:
+			mLeds_Write(kMaskLed1, kLedOn);
+			rotate_servo(&test_servo, &test_servo_duty);
+			break;
+		case _CHECK_ENGINE:
+			mLeds_Write(kMaskLed3, kLedOn);
+			break;
+		case _PAUSE_ALL:
+			mLeds_Write(kMaskLed2, kLedOn);
+			break;
+		default:
+			break;
+		}
 	}
 
 	return 0;
