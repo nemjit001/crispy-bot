@@ -102,6 +102,15 @@ static bool sFaultRight;
 // Distance measured by the LIDAR in mm
 static UInt8 sDistFront;
 
+uint8_t get_switch_state()
+{
+	return 0x0 |
+		mSwitch_ReadSwitch(kSw1) << 3 |
+		mSwitch_ReadSwitch(kSw2) << 2 |
+		mSwitch_ReadSwitch(kSw3) << 1 |
+		mSwitch_ReadSwitch(kSw4) << 0;
+}
+
 /*
  * @brief   Application entry point.
  */
@@ -187,16 +196,13 @@ int main(void)
 	mRs232_Setup();
 	mRs232_Open();
 
+	// set board switches as a number on startup
+	uint8_t switch_state = get_switch_state();
+
 	while(1)
 	{
-		if (mSwitch_ReadSwitch(kSw1) == true)
-		{
-			mLeds_Write(kMaskLed1, kLedOn);
-		}
-		else
-		{
-			mLeds_Write(kMaskLed1, kLedOff);
-		}
+		PRINTF("0x%x\r", switch_state);
+		switch_state = get_switch_state();
 	}
 
 	return 0;
