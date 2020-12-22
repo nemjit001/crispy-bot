@@ -215,14 +215,14 @@ int main(void)
 	float test_servo_duty = 0.0;
 	servoModule test_servo(servo1);
 
-	mDelay_ReStart(kPit1, delay, 300 / kPit1Period);
+	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
 	for (;;)
 	{
 		if(!mDelay_IsDelayDone(kPit1, delay))
 			continue;
 		
-		mDelay_ReStart(kPit1, delay, 300 / kPit1Period);
+		mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 		leds_off();
 
 		switch_state = get_switch_state();
