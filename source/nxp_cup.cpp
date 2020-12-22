@@ -74,7 +74,7 @@ extern "C"
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
-#define _CHECK_ENGINE	0b00000011 
+#define _CHECK_ENGINE	0b00000011
 #define _PAUSE_ALL		0b00001000
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
@@ -87,8 +87,9 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void display_voltage(float voltage)
+void display_battery_level()
 {
+	float voltage = mAd_Read(kUBatt);
 	mLeds_Write(kMaskLed1, kLedOn);
 
 	if (voltage > 6)
@@ -105,32 +106,34 @@ void display_voltage(float voltage)
 	}
 }
 
-void rotate_servo(servoModule *servo, float *duty)
+void test_servo()
 {
+	static servoModule servo(servoPort1);
+	static float duty = 0.0;
 	bool 	btn1 = mSwitch_ReadPushBut(kPushButSW1),
 			btn2 = mSwitch_ReadPushBut(kPushButSW2);
 
 	if (btn1 && btn2)
 	{
-		*duty = 0;
-		servo->setRotation(*duty);
+		duty = 0;
+		servo.setRotation(duty);
 		return;
 	}
 
 	if (btn1)
 	{
-		*duty += 0.05;
-		if (*duty > 1)
-			*duty = 1;
+		duty += 0.05;
+		if (duty > 1)
+			duty = 1;
 	}
 	else if (btn2)
 	{
-		*duty -= 0.05;
-		if (*duty < -1)
-			*duty = -1;
+		duty -= 0.05;
+		if (duty < -1)
+			duty = -1;
 	}
 
-	servo->setRotation(*duty);
+	servo.setRotation(duty);
 }
 
 uint8_t get_switch_state()
@@ -209,11 +212,6 @@ int main(void)
 	static uint8_t switch_state = 0x0;
 	// main loop delay
 	static Int16 delay = 0;
-	static float battery_voltage = 0.0;
-
-	/* test vars */
-	float test_servo_duty = 0.0;
-	servoModule test_servo(servo1);
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -226,25 +224,25 @@ int main(void)
 		leds_off();
 
 		switch_state = get_switch_state();
-		battery_voltage = mAd_Read(kUBatt);
 
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			/* regular run */
+			__asm("nop");
 			break;
 		case _CHECK_BATTERY:
-			display_voltage(battery_voltage);
+			display_battery_level();
 			break;
 		case _CHECK_SERVO:
 			mLeds_Write(kMaskLed1, kLedOn);
-			rotate_servo(&test_servo, &test_servo_duty);
+			test_servo();
 			break;
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
+			__asm("nop");
 			break;
 		default:
 			break;

@@ -7,15 +7,15 @@ extern "C"
 }
 
 typedef enum {
-    servo1,
-    servo2
+    servoPort1,
+    servoPort2
 } servo_port_num;
 
 class servoModule
 {
 private:
     servo_port_num servo_port;
-    volatile float duty;
+    float duty;
 public:
     servoModule(servo_port_num servo_port)
     {

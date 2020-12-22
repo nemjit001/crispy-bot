@@ -11,10 +11,10 @@ void servoModule::setRotation(float in)
 
     switch (this->servo_port)
     {
-    case servo1:
+    case servoPort1:
         mTimer_SetServoDuty(0, this->duty);
         break;
-    case servo2:
+    case servoPort2:
         mTimer_SetServoDuty(1, this->duty);
     }
 }
