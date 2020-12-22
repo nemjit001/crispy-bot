@@ -119,13 +119,13 @@ void rotate_servo(servoModule *servo, float *duty)
 
 	if (btn1)
 	{
-		*duty += 0.1;
+		*duty += 0.05;
 		if (*duty > 1)
 			*duty = 1;
 	}
 	else if (btn2)
 	{
-		*duty -= 0.1;
+		*duty -= 0.05;
 		if (*duty < -1)
 			*duty = -1;
 	}
