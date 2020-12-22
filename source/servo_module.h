@@ -15,14 +15,17 @@ class servoModule
 {
 private:
     servo_port_num servo_port;
+    volatile float duty;
 public:
     servoModule(servo_port_num servo_port)
     {
         this->servo_port = servo_port;
-        mTimer_SetServoDuty(this->servo_port, 0);
+        this->duty = 0.0;
+        mTimer_SetServoDuty(this->servo_port, this->duty);
     }
 
     void setRotation(float in);
+    float getRotation(void);
 };
 
 #endif
