@@ -241,7 +241,7 @@ int main(void)
 			rotate_servo(&test_servo, &test_servo_duty);
 			break;
 		case _CHECK_ENGINE:
-			mLeds_Write(kMaskLed3, kLedOn);
+			mLeds_Write(kMaskLed4, kLedOn);
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
