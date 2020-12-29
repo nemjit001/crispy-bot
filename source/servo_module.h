@@ -6,7 +6,8 @@ extern "C"
 #include "Modules/mTimer.h"
 }
 
-typedef enum {
+typedef enum
+{
     servoPort1,
     servoPort2
 } servo_port_num;

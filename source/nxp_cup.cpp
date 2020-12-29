@@ -70,12 +70,16 @@ extern "C"
 
 /* Own modules */
 #include "servo_module.h"
+#include "camera_module.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
 #define _CHECK_ENGINE	0b00000011
+#define _CHECK_CAMERA	0b00000100
 #define _PAUSE_ALL		0b00001000
+
+#define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
@@ -134,6 +138,24 @@ void test_servo()
 	}
 
 	servo.setRotation(duty);
+}
+
+void test_camera()
+{
+	static cameraModule camera;
+	Vector *vectors = NULL;
+	int num_vectors;
+
+	num_vectors = camera.getVectors(&vectors);
+
+	if (!DEBUG_PRINT_ENABLED)
+		return;
+
+	for (int i = 0; i < num_vectors; i++)
+	{
+		printf("\tline\t%i:", i);
+		vectors[i].print();
+	}
 }
 
 uint8_t get_switch_state()
@@ -208,7 +230,7 @@ int main(void)
 {
 	board_device_setup();
 
-	// bitmask containing boardswitch state
+	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
 	// main loop delay
 	static Int16 delay = 0;
@@ -239,6 +261,10 @@ int main(void)
 			break;
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
+			break;
+		case _CHECK_CAMERA:
+			mLeds_Write(kMaskLed3, kLedOn);
+			test_camera();
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
