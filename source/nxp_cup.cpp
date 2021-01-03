@@ -71,6 +71,7 @@ extern "C"
 /* Own modules */
 #include "servo_module.h"
 #include "camera_module.h"
+#include "engine_module.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
@@ -108,6 +109,9 @@ void display_battery_level()
 	{
 		mLeds_Write(kMaskLed4, kLedOn);
 	}
+
+	if (DEBUG_PRINT_ENABLED)
+		PRINTF("Battery level: %2f Volts\n");
 }
 
 void test_servo()
@@ -137,23 +141,39 @@ void test_servo()
 			duty = -1;
 	}
 
+	if (DEBUG_PRINT_ENABLED)
+		PRINTF("Setting servo to %2f\n", duty);
+
 	servo.setRotation(duty);
+}
+
+void test_engines()
+{
+	static engineModule engine;
+
+	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
+
+	if (!DEBUG_PRINT_ENABLED)
+		return;
+
+	PRINTF("SPEED LEFT: %2f\nSPEED RIGHT: %2f\n", engine.getSpeedLeft(), engine.getSpeedRight());
 }
 
 void test_camera()
 {
 	static cameraModule camera;
 	Vector *vectors = NULL;
-	int num_vectors;
 
-	num_vectors = camera.getVectors(&vectors);
+	int num_vectors = camera.getVectors(&vectors);
 
 	if (!DEBUG_PRINT_ENABLED)
 		return;
+	
+	PRINTF("Detected %d lines\n", num_vectors);
 
 	for (int i = 0; i < num_vectors; i++)
 	{
-		printf("\tline\t%i:", i);
+		PRINTF("line\t%i:\t", i);
 		vectors[i].print();
 	}
 }
@@ -230,6 +250,9 @@ int main(void)
 {
 	board_device_setup();
 
+	if (DEBUG_PRINT_ENABLED)
+		PRINTF("Hello World!\n");
+
 	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
 	// main loop delay
@@ -261,6 +284,7 @@ int main(void)
 			break;
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
+			test_engines();
 			break;
 		case _CHECK_CAMERA:
 			mLeds_Write(kMaskLed3, kLedOn);
