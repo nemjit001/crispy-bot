@@ -46,6 +46,7 @@ extern "C"
 #include "clock_config.h"
 #include "MK64F12.h"
 #include "fsl_debug_console.h"
+#include "Utils/def.h"
 
 #include "Modules/mSpi.h"
 #include "Modules/mDac.h"
@@ -230,6 +231,9 @@ int main(void)
 {
 	board_device_setup();
 
+	//test string
+	char[7] test_string = "BEANS\n\0";
+
 	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
 	// main loop delay
@@ -239,6 +243,7 @@ int main(void)
 
 	for (;;)
 	{
+		mRs232_Uart4WriteString((Int8 *)test_string);
 		if(!mDelay_IsDelayDone(kPit1, delay))
 			continue;
 		

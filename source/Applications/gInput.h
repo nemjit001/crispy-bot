@@ -1,7 +1,7 @@
 /*
 ------------------------------------------------------------
 Copyright 2003-20xx Haute �cole ARC Ing�ni�rie, Switzerland. 
-All rights reserved./*
+All rights reserved.
  * Copyright 2003-20xx Haute �cole ARC Ing�ni�rie, Switzerland. 
  * All rights reserved.
 
