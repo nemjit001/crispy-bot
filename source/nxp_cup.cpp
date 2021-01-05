@@ -70,14 +70,12 @@ extern "C"
 
 /* Own modules */
 #include "servo_module.h"
-#include "camera_module.h"
 #include "engine_module.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
 #define _CHECK_ENGINE	0b00000011
-#define _CHECK_CAMERA	0b00000100
 #define _PAUSE_ALL		0b00001000
 
 #define DEBUG_PRINT_ENABLED 1
@@ -111,7 +109,7 @@ void display_battery_level()
 	}
 
 	if (DEBUG_PRINT_ENABLED)
-		PRINTF("Battery level: %2f Volts\n");
+		PRINTF("Battery level: %2f Volts\n", voltage);
 }
 
 void test_servo()
@@ -157,25 +155,6 @@ void test_engines()
 		return;
 
 	PRINTF("SPEED LEFT: %2f\nSPEED RIGHT: %2f\n", engine.getSpeedLeft(), engine.getSpeedRight());
-}
-
-void test_camera()
-{
-	static cameraModule camera;
-	Vector *vectors = NULL;
-
-	int num_vectors = camera.getVectors(&vectors);
-
-	if (!DEBUG_PRINT_ENABLED)
-		return;
-	
-	PRINTF("Detected %d lines\n", num_vectors);
-
-	for (int i = 0; i < num_vectors; i++)
-	{
-		PRINTF("line\t%i:\t", i);
-		vectors[i].print();
-	}
 }
 
 uint8_t get_switch_state()
@@ -285,10 +264,6 @@ int main(void)
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
 			test_engines();
-			break;
-		case _CHECK_CAMERA:
-			mLeds_Write(kMaskLed3, kLedOn);
-			test_camera();
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
