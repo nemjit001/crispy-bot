@@ -72,6 +72,7 @@ extern "C"
 /* Own modules */
 #include "servo_module.h"
 #include "engine_module.h"
+#include "Utils/util.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
@@ -229,20 +230,26 @@ void board_device_setup()
 int main(void)
 {
 	board_device_setup();
-
-	//test string
-	char[7] test_string = "BEANS\n\0";
+	print_string("INITIALIZING BOARD\n\r\0");
 
 	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
 	// main loop delay
 	static Int16 delay = 0;
 
+	Pixy2SPI_SS cam;
+
+	cam.init();
+	cam.setLamp(1,1);
+
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
+
+	mLeds_Write(kMaskLed1, kLedOn);
 
 	for (;;)
 	{
-		mRs232_Uart4WriteString((Int8 *)test_string);
+		print_string("LOOPING\n\r\0");
+
 		if(!mDelay_IsDelayDone(kPit1, delay))
 			continue;
 		

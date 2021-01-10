@@ -78,9 +78,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "Utils/util.h"
+
 #include "Pixy2CCC.h"
 #include "Pixy2Line.h"
 #include "Pixy2Video.h"
+#include "Pixy2SPI_SS.h"
 
 #include "Modules/mDelay.h"
 extern "C"
@@ -195,6 +198,9 @@ int8_t TPixy2<LinkType>::init(uint32_t arg)
     }
     usleep(5000); // delay for sync
   }
+
+  print_string("INITIALIZING CAM\n\r");
+
   // timeout
   return PIXY_RESULT_TIMEOUT;
 }
@@ -341,6 +347,9 @@ int8_t TPixy2<LinkType>::getVersion()
 {
   m_length = 0;
   m_type = PIXY_TYPE_REQUEST_VERSION;
+
+  print_string("GET VERSION\n\r");
+
   sendPacket();
   if (recvPacket() == 0)
   {
@@ -361,6 +370,9 @@ int8_t TPixy2<LinkType>::getResolution()
   m_length = 1;
   m_bufPayload[0] = 0; // for future types of queries
   m_type = PIXY_TYPE_REQUEST_RESOLUTION;
+
+  print_string("GET RESOLUTION\n\r");
+
   sendPacket();
   if (recvPacket() == 0)
   {
@@ -438,6 +450,8 @@ template <class LinkType>
 int8_t TPixy2<LinkType>::setLamp(uint8_t upper, uint8_t lower)
 {
   uint32_t res;
+
+  print_string("SETTING LAMPS\n\0");
 
   m_bufPayload[0] = upper;
   m_bufPayload[1] = lower;
