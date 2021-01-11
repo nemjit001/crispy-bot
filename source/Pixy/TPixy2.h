@@ -216,6 +216,8 @@ int16_t TPixy2<LinkType>::getSync()
   for (i = j = 0, cprev = 0; true; i++)
   {
     res = m_link.recv(&c, 1);
+
+
     if (res >= PIXY_RESULT_OK)
     {
       // since we're using little endian, previous byte is least significant byte
@@ -223,6 +225,11 @@ int16_t TPixy2<LinkType>::getSync()
       // current byte is most significant byte
       start |= c << 8;
       cprev = c;
+
+       char test_str2[12];
+        sprintf(test_str2, "start: 0x%x\n\r", start);
+        print_string(test_str2);
+
       if (start == PIXY_CHECKSUM_SYNC)
       {
         m_cs = true;
@@ -241,6 +248,7 @@ int16_t TPixy2<LinkType>::getSync()
     {
       if (j >= 4)
       {
+
 #ifdef PIXY_DEBUG
         printf("error: no response\n");
 #endif
@@ -261,6 +269,12 @@ int16_t TPixy2<LinkType>::recvPacket()
   int16_t res;
 
   res = getSync();
+
+  char test_str2[3];
+  sprintf(test_str2, "%d\n\r", res);
+  print_string(test_str2);
+
+
   if (res < 0)
     return res;
 
@@ -350,8 +364,11 @@ int8_t TPixy2<LinkType>::getVersion()
 
   print_string("GET VERSION\n\r");
 
-  sendPacket();
-  if (recvPacket() == 0)
+  sendPacket();  
+
+  int ret = recvPacket();
+
+  if (ret == 0)
   {
     if (m_type == PIXY_TYPE_RESPONSE_VERSION)
     {

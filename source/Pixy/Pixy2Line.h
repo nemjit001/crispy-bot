@@ -73,7 +73,7 @@ struct Vector
   {
     char buf[64];
     sprintf(buf, "vector: (%d %d) (%d %d) index: %d flags %d\n", m_x0, m_y0, m_x1, m_y1, m_index, m_flags);
-    printf(buf);
+    print_string(buf);
   }
 
   uint8_t m_x0;
