@@ -98,7 +98,7 @@ void leds_off()
 
 void normal_run()
 {
-	pixy.line.getMainFeatures(LINE_ALL_FEATURES, 1);
+	pixy.line.getAllFeatures(LINE_ALL_FEATURES, 1);
 
   	char test_str2[15];
   	sprintf(test_str2, "numVectors: %d\n\r", pixy.line.numVectors);
@@ -244,7 +244,7 @@ int main(void)
 	static Int16 delay = 0;
 
 	pixy.init();
-	pixy.setLED(0, 255, 0);
+	pixy.setLamp(1, 1);
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -264,7 +264,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			// normal_run(pixy);
+			normal_run();
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();
