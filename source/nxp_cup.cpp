@@ -104,8 +104,15 @@ void normal_run()
   	sprintf(test_str2, "numVectors: %d\n\r", pixy.line.numVectors);
   	print_string(test_str2);
 
-	for(int i = 0; i < pixy.line.numVectors; i ++){
-		pixy.line.vectors[i].print();
+	for(int i = 0; i < pixy.line.numVectors; i ++)
+	{
+		point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
+		point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
+
+		char data[64];
+		sprintf(data, "(%d, %d) -> (%d, %d)\r\n", (int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y);
+
+		print_string(data);
 	}
 }
 

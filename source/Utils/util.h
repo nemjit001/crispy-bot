@@ -12,8 +12,8 @@
 #define RES_Y 104
 
 typedef struct {
-    float x;
-    float y;
+    double x;
+    double y;
 } point;
 
 void print_string(char *string){
@@ -21,14 +21,14 @@ void print_string(char *string){
 }
 
 point convert_point(int x, int y) {
-    float angleX = FOV_X * (x / (float)RES_X) - (FOV_X / 2);
-    float angleY = CAM_ANGLE + (FOV_Y * (y / (float)RES_Y)) - (FOV_Y / 2);
+    double angleX = FOV_X * (x / (double)RES_X) - (FOV_X / 2);
+    double angleY = CAM_ANGLE + (FOV_Y * (y / (double)RES_Y)) - (FOV_Y / 2);
     
-    float pointY = CAM_HEIGHT * tan(angleY);
+    double pointY = CAM_HEIGHT * tan(angleY);
     
-    float beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + pointY * pointY);
+    double beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + pointY * pointY);
     
-    float pointX = beamLength * tan(angleX);
+    double pointX = beamLength * tan(angleX);
 
     point p;
     p.x = pointX;
