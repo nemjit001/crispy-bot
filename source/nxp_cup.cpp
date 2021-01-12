@@ -85,6 +85,9 @@ extern "C"
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
+// line camera
+static Pixy2SPI_SS pixy;
+
 void leds_off()
 {
 	mLeds_Write(kMaskLed1, kLedOff);
@@ -93,15 +96,16 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void normal_run(Pixy2SPI_SS cam){
-	cam.line.getAllFeatures();
+void normal_run()
+{
+	pixy.line.getMainFeatures(LINE_ALL_FEATURES, 1);
 
   	char test_str2[15];
-  	sprintf(test_str2, "numVectors: %d\n\r", cam.line.numVectors);
+  	sprintf(test_str2, "numVectors: %d\n\r", pixy.line.numVectors);
   	print_string(test_str2);
 
-	for(int i = 0; i < cam.line.numVectors; i ++){
-		cam.line.vectors[i].print();
+	for(int i = 0; i < pixy.line.numVectors; i ++){
+		pixy.line.vectors[i].print();
 	}
 }
 
@@ -122,9 +126,6 @@ void display_battery_level()
 	{
 		mLeds_Write(kMaskLed4, kLedOn);
 	}
-
-	if (DEBUG_PRINT_ENABLED)
-		PRINTF("Battery level: %2f Volts\n", voltage);
 }
 
 void test_servo()
@@ -154,9 +155,6 @@ void test_servo()
 			duty = -1;
 	}
 
-	if (DEBUG_PRINT_ENABLED)
-		PRINTF("Setting servo to %2f\n", duty);
-
 	servo.setRotation(duty);
 }
 
@@ -165,11 +163,6 @@ void test_engines()
 	static engineModule engine;
 
 	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
-
-	if (!DEBUG_PRINT_ENABLED)
-		return;
-
-	PRINTF("SPEED LEFT: %2f\nSPEED RIGHT: %2f\n", engine.getSpeedLeft(), engine.getSpeedRight());
 }
 
 uint8_t get_switch_state()
@@ -250,10 +243,8 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	Pixy2SPI_SS cam;
-
-	cam.init();
-	cam.setLamp(1,1);
+	pixy.init();
+	pixy.setLED(0, 255, 0);
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -261,12 +252,11 @@ int main(void)
 
 	for (;;)
 	{
-		print_string("LOOPING\n\r\0");
-
 		if(!mDelay_IsDelayDone(kPit1, delay))
 			continue;
 		
 		mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
+
 		leds_off();
 
 		switch_state = get_switch_state();
@@ -274,7 +264,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			//normal_run(cam);
+			// normal_run(pixy);
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();
