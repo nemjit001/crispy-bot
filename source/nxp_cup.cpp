@@ -68,7 +68,7 @@ extern "C"
 
 /* Pixy 2 */
 #include "Pixy/Pixy2SPI_SS.h"
-#include "Pixy/Pixy2Line.h"
+//#include "Pixy/Pixy2line.h"
 
 /* Own modules */
 #include "servo_module.h"
@@ -91,18 +91,6 @@ void leds_off()
 	mLeds_Write(kMaskLed2, kLedOff);
 	mLeds_Write(kMaskLed3, kLedOff);
 	mLeds_Write(kMaskLed4, kLedOff);
-}
-
-void normal_run(Pixy2SPI_SS cam){
-	cam.line.getAllFeatures();
-
-  	char test_str2[15];
-  	sprintf(test_str2, "numVectors: %d\n\r", cam.line.numVectors);
-  	print_string(test_str2);
-
-	for(int i = 0; i < cam.line.numVectors; i ++){
-		cam.line.vectors[i].print();
-	}
 }
 
 void display_battery_level()
@@ -274,7 +262,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			//normal_run(cam);
+			__asm("nop");
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();
