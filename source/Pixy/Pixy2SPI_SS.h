@@ -58,9 +58,6 @@ public:
     SPI.begin();
     SPI.beginTransaction(SPISettings(PIXY_SPI_CLOCKRATE, MSBFIRST, SPI_MODE1));
     */
-    char *test_string = "CAM OPENED\n\r\0";
-    mRs232_Uart4WriteString((Int8 *)test_string);
-
     return 0;
   }
 
@@ -88,9 +85,6 @@ public:
     // CS camera ON
     iDio_SetPort(kPortD, kMaskIo4, kIoOn);
 
-    char *test_string = "RECEIVED MESSAGE\n\r\0";
-    mRs232_Uart4WriteString((Int8 *)test_string);
-
     return len;
   }
 
@@ -106,10 +100,6 @@ public:
     }
     // CS camera ON
     iDio_SetPort(kPortD, kMaskIo4, kIoOn);
-
-    char *test_string = "SENT MESSAGE\n\r\0";
-    mRs232_Uart4WriteString((Int8 *)test_string);
-
     return len;
   }
 

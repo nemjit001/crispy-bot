@@ -85,12 +85,43 @@ extern "C"
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
+// line camera
+static Pixy2SPI_SS pixy;
+
 void leds_off()
 {
 	mLeds_Write(kMaskLed1, kLedOff);
 	mLeds_Write(kMaskLed2, kLedOff);
 	mLeds_Write(kMaskLed3, kLedOff);
 	mLeds_Write(kMaskLed4, kLedOff);
+}
+
+void normal_run()
+{
+	pixy.line.getAllFeatures(LINE_ALL_FEATURES, 1);
+
+  	char test_str2[32];
+	pixy.getResolution(); 
+  	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
+  	print_string(test_str2);
+
+	for(int i = 0; i < pixy.line.numVectors; i ++)
+	{
+		pixy.line.vectors[i].print();
+
+		point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
+		point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
+
+		char data[64];
+		sprintf(data, "Angle: %d degrees\n\r", (int)vector_to_angle(p0.x, p0.y, p1.x, p1.y));
+
+		print_string(data);
+	}
+
+	char data2[64];
+	sprintf(data2, "------------------------------------------------\n\r");
+
+	print_string(data2);
 }
 
 void display_battery_level()
@@ -110,9 +141,6 @@ void display_battery_level()
 	{
 		mLeds_Write(kMaskLed4, kLedOn);
 	}
-
-	if (DEBUG_PRINT_ENABLED)
-		PRINTF("Battery level: %2f Volts\n", voltage);
 }
 
 void test_servo()
@@ -142,9 +170,6 @@ void test_servo()
 			duty = -1;
 	}
 
-	if (DEBUG_PRINT_ENABLED)
-		PRINTF("Setting servo to %2f\n", duty);
-
 	servo.setRotation(duty);
 }
 
@@ -153,11 +178,6 @@ void test_engines()
 	static engineModule engine;
 
 	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
-
-	if (!DEBUG_PRINT_ENABLED)
-		return;
-
-	PRINTF("SPEED LEFT: %2f\nSPEED RIGHT: %2f\n", engine.getSpeedLeft(), engine.getSpeedRight());
 }
 
 uint8_t get_switch_state()
@@ -238,10 +258,8 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	Pixy2SPI_SS cam;
-
-	cam.init();
-	cam.setLamp(1,1);
+	pixy.init();
+	pixy.setLamp(1, 1);
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -249,12 +267,11 @@ int main(void)
 
 	for (;;)
 	{
-		print_string("LOOPING\n\r\0");
-
 		if(!mDelay_IsDelayDone(kPit1, delay))
 			continue;
 		
 		mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
+
 		leds_off();
 
 		switch_state = get_switch_state();
@@ -262,7 +279,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			__asm("nop");
+			normal_run();
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();

@@ -78,12 +78,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "Utils/util.h"
-
 #include "Pixy2CCC.h"
 #include "Pixy2Line.h"
 #include "Pixy2Video.h"
-#include "Pixy2SPI_SS.h"
 
 #include "Modules/mDelay.h"
 extern "C"
@@ -198,9 +195,6 @@ int8_t TPixy2<LinkType>::init(uint32_t arg)
     }
     usleep(5000); // delay for sync
   }
-
-  print_string("INITIALIZING CAM\n\r");
-
   // timeout
   return PIXY_RESULT_TIMEOUT;
 }
@@ -216,8 +210,6 @@ int16_t TPixy2<LinkType>::getSync()
   for (i = j = 0, cprev = 0; true; i++)
   {
     res = m_link.recv(&c, 1);
-
-
     if (res >= PIXY_RESULT_OK)
     {
       // since we're using little endian, previous byte is least significant byte
@@ -225,11 +217,6 @@ int16_t TPixy2<LinkType>::getSync()
       // current byte is most significant byte
       start |= c << 8;
       cprev = c;
-
-       char test_str2[12];
-        sprintf(test_str2, "start: 0x%x\n\r", start);
-        print_string(test_str2);
-
       if (start == PIXY_CHECKSUM_SYNC)
       {
         m_cs = true;
@@ -248,7 +235,6 @@ int16_t TPixy2<LinkType>::getSync()
     {
       if (j >= 4)
       {
-
 #ifdef PIXY_DEBUG
         printf("error: no response\n");
 #endif
@@ -269,12 +255,6 @@ int16_t TPixy2<LinkType>::recvPacket()
   int16_t res;
 
   res = getSync();
-
-  char test_str2[3];
-  sprintf(test_str2, "%d\n\r", res);
-  print_string(test_str2);
-
-
   if (res < 0)
     return res;
 
@@ -361,14 +341,8 @@ int8_t TPixy2<LinkType>::getVersion()
 {
   m_length = 0;
   m_type = PIXY_TYPE_REQUEST_VERSION;
-
-  print_string("GET VERSION\n\r");
-
-  sendPacket();  
-
-  int ret = recvPacket();
-
-  if (ret == 0)
+  sendPacket();
+  if (recvPacket() == 0)
   {
     if (m_type == PIXY_TYPE_RESPONSE_VERSION)
     {
@@ -387,9 +361,6 @@ int8_t TPixy2<LinkType>::getResolution()
   m_length = 1;
   m_bufPayload[0] = 0; // for future types of queries
   m_type = PIXY_TYPE_REQUEST_RESOLUTION;
-
-  print_string("GET RESOLUTION\n\r");
-
   sendPacket();
   if (recvPacket() == 0)
   {
@@ -467,8 +438,6 @@ template <class LinkType>
 int8_t TPixy2<LinkType>::setLamp(uint8_t upper, uint8_t lower)
 {
   uint32_t res;
-
-  print_string("SETTING LAMPS\n\0");
 
   m_bufPayload[0] = upper;
   m_bufPayload[1] = lower;
