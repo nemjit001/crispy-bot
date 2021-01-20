@@ -89,8 +89,9 @@ extern "C"
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
 // line camera
-static Pixy2SPI_SS *pixy;
-static Pixy2Video<Link2SPI_SS> pixy_video(pixy);
+static Pixy2SPI_SS pixy;
+static Pixy2SPI_SS *temp;
+static Pixy2Video<Link2SPI_SS> pixy_video(temp);
 
 void test_engines()
 {
@@ -121,13 +122,15 @@ void set_motors(float speed){
 
 void normal_run()
 {
-	pixy->getResolution();
+	pixy.getResolution();
 
 	char test[64];
-	sprintf(test, "height: %d width: %d fps: %d\n\r", pixy->frameHeight, pixy->frameWidth, pixy->getFPS());
+	sprintf(test, "height: %d width: %d fps: %d\n\r", pixy.frameHeight, pixy.frameWidth, pixy.getFPS());
 	print_string(test);
 
 	uint8_t *r, *g, *b;
+	
+	print_string("GETTING RGB \n\r");
 
 	pixy_video.getRGB(25, 25, r, g, b);
 	char test1[64];
@@ -262,9 +265,9 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	pixy->init();
-	pixy->setLamp(1, 1);
-	pixy->changeProg("video");
+	pixy.init();
+	pixy.setLamp(1, 1);
+	pixy.changeProg("video");
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
