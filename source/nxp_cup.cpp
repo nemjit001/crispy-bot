@@ -81,12 +81,21 @@ extern "C"
 #define _CHECK_ENGINE	0b00000011
 #define _PAUSE_ALL		0b00001000
 
+#define _STEP_PER_DEGREE 2 / 180
+
 #define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
 // line camera
 static Pixy2SPI_SS pixy;
+
+void test_engines()
+{
+	static engineModule engine;
+
+	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
+}
 
 void leds_off()
 {
@@ -96,32 +105,45 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
+void set_servo(float angle){
+	static servoModule servo(servoPort1);
+
+	servo.setRotation(angle * _STEP_PER_DEGREE);
+}
+
+void set_motors(float speed){
+	static engineModule engine;
+
+	engine.setSpeed(speed, speed);
+}
+
 void normal_run()
 {
-	pixy.line.getAllFeatures(LINE_ALL_FEATURES, 1);
+	test_engines();
 
-  	char test_str2[32];
+	pixy.line.getMainFeatures();
+	for(int i = 0; i < pixy.line.numVectors; i++) pixy.line.vectors[i].print();
+
+  	/*char test_str2[32];
 	pixy.getResolution(); 
   	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
-  	print_string(test_str2);
+  	print_string(test_str2);*/
 
-	for(int i = 0; i < pixy.line.numVectors; i ++)
-	{
-		pixy.line.vectors[i].print();
+		//point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
+		//point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
 
-		point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
-		point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
+	char data1[64];
+	double angle1 = vector_to_angle(pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1);
+	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d\r\n", pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1, (int)angle1);
 
-		char data[64];
-		sprintf(data, "Angle: %d degrees\n\r", (int)vector_to_angle(p0.x, p0.y, p1.x, p1.y));
-
-		print_string(data);
-	}
+	print_string(data1);
 
 	char data2[64];
 	sprintf(data2, "------------------------------------------------\n\r");
 
 	print_string(data2);
+
+	set_servo(angle1);
 }
 
 void display_battery_level()
@@ -171,13 +193,6 @@ void test_servo()
 	}
 
 	servo.setRotation(duty);
-}
-
-void test_engines()
-{
-	static engineModule engine;
-
-	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
 }
 
 uint8_t get_switch_state()
