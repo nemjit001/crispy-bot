@@ -68,6 +68,7 @@ extern "C"
 
 /* Pixy 2 */
 #include "Pixy/Pixy2SPI_SS.h"
+#include "Pixy/Pixy2Video.h"
 //#include "Pixy/Pixy2line.h"
 
 /* Own modules */
@@ -88,7 +89,8 @@ extern "C"
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
 // line camera
-static Pixy2SPI_SS pixy;
+static Pixy2SPI_SS *pixy;
+static Pixy2Video<Link2SPI_SS> pixy_video(pixy);
 
 void test_engines()
 {
@@ -119,31 +121,18 @@ void set_motors(float speed){
 
 void normal_run()
 {
-	test_engines();
+	pixy->getResolution();
 
-	pixy.line.getMainFeatures();
-	for(int i = 0; i < pixy.line.numVectors; i++) pixy.line.vectors[i].print();
+	char test[64];
+	sprintf(test, "height: %d width: %d fps: %d\n\r", pixy->frameHeight, pixy->frameWidth, pixy->getFPS());
+	print_string(test);
 
-  	/*char test_str2[32];
-	pixy.getResolution(); 
-  	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
-  	print_string(test_str2);*/
+	uint8_t *r, *g, *b;
 
-		//point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
-		//point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
-
-	char data1[64];
-	double angle1 = vector_to_angle(pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1);
-	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d\r\n", pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1, (int)angle1);
-
-	print_string(data1);
-
-	char data2[64];
-	sprintf(data2, "------------------------------------------------\n\r");
-
-	print_string(data2);
-
-	set_servo(angle1);
+	pixy_video.getRGB(25, 25, r, g, b);
+	char test1[64];
+	sprintf(test1, "r: %d, g: %d, b: %d\n\r", *r, *g, *b);
+	print_string(test1);
 }
 
 void display_battery_level()
@@ -273,8 +262,9 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	pixy.init();
-	pixy.setLamp(1, 1);
+	pixy->init();
+	pixy->setLamp(1, 1);
+	pixy->changeProg("video");
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
