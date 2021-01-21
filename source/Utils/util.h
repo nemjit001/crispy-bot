@@ -16,11 +16,13 @@ typedef struct {
     double y;
 } point;
 
-void print_string(char *string){
+void print_string(const char *string)
+{
     mRs232_Uart4WriteString((Int8 *)string);
 }
 
-point convert_point(int x, int y) {
+point convert_point(int x, int y)
+{
     double angleX = FOV_X * (x / (double)RES_X) - (FOV_X / 2);
     double angleY = CAM_ANGLE + (FOV_Y * (y / (double)RES_Y)) - (FOV_Y / 2);
     

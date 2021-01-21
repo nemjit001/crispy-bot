@@ -73,20 +73,50 @@ extern "C"
 /* Own modules */
 #include "servo_module.h"
 #include "engine_module.h"
-#include "Utils/util.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
 #define _CHECK_ENGINE	0b00000011
+#define _CHECK_CAM		0b00000100
 #define _PAUSE_ALL		0b00001000
 
 #define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
-// line camera
-static Pixy2SPI_SS pixy;
+class rover
+{
+private:
+    Pixy2SPI_SS pixy;
+    servoModule *servo;
+    engineModule *engines;
+public:
+    rover() {
+        servo = new servoModule(servoPort1);
+        engines = new engineModule();
+        pixy.init();
+        pixy.setLED(0, 255, 0);
+
+		this->servo->setRotation(0.0);
+		this->engines->setSpeed(0.0, 0.0);
+    }
+
+    ~rover()
+    {
+        delete servo;
+        delete engines;
+    }
+
+    inline void step() {
+		float servo_rot = mAd_Read(kPot2);
+		float engine_speed = mAd_Read(kPot1);
+		this->engines->setSpeed(engine_speed, engine_speed);
+		this->servo->setRotation(servo_rot);
+	};
+
+	inline Pixy2SPI_SS &getPixy() { return this->pixy; };
+};
 
 void leds_off()
 {
@@ -96,7 +126,7 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void normal_run()
+void cam_test(Pixy2SPI_SS &pixy)
 {
 	pixy.line.getAllFeatures(LINE_ALL_FEATURES, 1);
 
@@ -250,8 +280,10 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	pixy.init();
-	pixy.setLamp(1, 1);
+	static rover car;
+
+	// line camera
+	Pixy2SPI_SS test_pixy = car.getPixy();
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -271,7 +303,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			normal_run();
+			car.step();
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();
@@ -283,6 +315,10 @@ int main(void)
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
 			test_engines();
+			break;
+		case _CHECK_CAM:
+			mLeds_Write(kMaskLed3, kLedOn);
+			cam_test(test_pixy);
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
