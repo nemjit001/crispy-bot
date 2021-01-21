@@ -4,8 +4,8 @@
 #include "Modules/mRS232.h"
 #include "math.h"
 
-#define CAM_HEIGHT 34
-#define CAM_ANGLE 54 * M_PI / 180.0
+#define CAM_HEIGHT 32.8
+#define CAM_ANGLE 65 * M_PI / 180.0
 #define FOV_X 60
 #define FOV_Y 40
 #define RES_X 636
@@ -37,6 +37,13 @@ point convert_point(int x, int y)
     p.y = pointY;
     
     return p;
+}
+
+double vector_to_angle(double x0, double y0, double x1, double y1){
+    double x = x1 - x0;
+    double y = y0 - y1;
+
+    return (atan2(y, x) / M_PI) * 180.0;
 }
 
 #endif

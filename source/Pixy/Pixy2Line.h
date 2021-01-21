@@ -173,7 +173,7 @@ private:
 };
 
 template <class LinkType>
-int8_t Pixy2Line<LinkType>::getFeatures(uint8_t type, uint8_t features, bool wait)
+int8_t Pixy2Line<LinkType>::    getFeatures(uint8_t type, uint8_t features, bool wait)
 {
   int8_t res;
   uint8_t offset, fsize, ftype, *fdata;
@@ -210,6 +210,8 @@ int8_t Pixy2Line<LinkType>::getFeatures(uint8_t type, uint8_t features, bool wai
             vectors = (Vector *)fdata;
             numVectors = fsize / sizeof(Vector);
             res |= LINE_VECTOR;
+
+            for(int i = 0; i < numVectors; i++) vectors[i].print();
           }
           else if (ftype == LINE_INTERSECTION)
           {
