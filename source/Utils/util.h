@@ -16,7 +16,8 @@ typedef struct {
     double y;
 } point;
 
-void print_string(char *string){
+void print_string(const char *string)
+{
     mRs232_Uart4WriteString((Int8 *)string);
 }
 

@@ -73,28 +73,51 @@ extern "C"
 /* Own modules */
 #include "servo_module.h"
 #include "engine_module.h"
-#include "Utils/util.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
 #define _CHECK_ENGINE	0b00000011
+#define _CHECK_CAM		0b00000100
 #define _PAUSE_ALL		0b00001000
 
-#define _STEP_PER_DEGREE 2 / 180
-
+#define STEP_PER_DEGREE 2 / 180
 #define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
-struct Features{
-	point p0;
-	point p1;
-	double angle = 0.00;
-} prev_feature; 
+class rover
+{
+private:
+    Pixy2SPI_SS pixy;
+    servoModule *servo;
+    engineModule *engines;
+public:
+    rover() {
+        servo = new servoModule(servoPort1);
+        engines = new engineModule();
+        pixy.init();
+        pixy.setLED(0, 255, 0);
 
-// line camera
-static Pixy2SPI_SS pixy;
+		this->servo->setRotation(0.0);
+		this->engines->setSpeed(0.0, 0.0);
+    }
+
+    ~rover()
+    {
+        delete servo;
+        delete engines;
+    }
+
+    inline void step() {
+		float servo_rot = mAd_Read(kPot2);
+		float engine_speed = mAd_Read(kPot1);
+		this->engines->setSpeed(engine_speed, engine_speed);
+		this->servo->setRotation(servo_rot);
+	};
+
+	inline Pixy2SPI_SS &getPixy() { return this->pixy; };
+};
 
 void test_engines()
 {
@@ -111,29 +134,20 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void set_servo(float angle){
-	static servoModule servo(servoPort1);
-
-	servo.setRotation(angle * _STEP_PER_DEGREE);
-}
-
-void set_motors(float speed){
-	static engineModule engine;
-
-	engine.setSpeed(speed, speed);
-}
-
-void normal_run()
+void cam_test(Pixy2SPI_SS &pixy)
 {
 	test_engines();
+	static servoModule servo(servoPort1);
 
 	pixy.line.getMainFeatures();
 	for(int i = 0; i < pixy.line.numVectors; i++) pixy.line.vectors[i].print();
 
-  	/*char test_str2[32];
+  	/*
+	char test_str2[32];
 	pixy.getResolution(); 
   	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
-  	print_string(test_str2);*/
+  	print_string(test_str2);
+	*/
 
 		point p0 = convert_point(pixy.line.vectors[0].m_x0, pixy.line.vectors[0].m_y0);
 		point p1 = convert_point(pixy.line.vectors[0].m_x1, pixy.line.vectors[0].m_y1);
@@ -285,8 +299,10 @@ int main(void)
 	// main loop delay
 	static Int16 delay = 0;
 
-	pixy.init();
-	pixy.setLamp(1, 1);
+	static rover car;
+
+	// line camera
+	Pixy2SPI_SS test_pixy = car.getPixy();
 
 	mDelay_ReStart(kPit1, delay, K_MAIN_INTERVAL);
 
@@ -306,7 +322,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			normal_run();
+			car.step();
 			break;
 		case _CHECK_BATTERY:
 			display_battery_level();
@@ -318,6 +334,10 @@ int main(void)
 		case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
 			test_engines();
+			break;
+		case _CHECK_CAM:
+			mLeds_Write(kMaskLed3, kLedOn);
+			cam_test(test_pixy);
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);

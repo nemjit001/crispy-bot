@@ -36,11 +36,11 @@
 // all communication modes (SPI, I2C and UART) can share the same code.
 //
 
-#include "Modules/mDelay.h"
-#include "Utils/util.h"
-
 #ifndef _PIXY2LINE_H
 #define _PIXY2LINE_H
+
+#include "Modules/mDelay.h"
+#include "Utils/util.h"
 
 #define LINE_REQUEST_GET_FEATURES 0x30
 #define LINE_RESPONSE_GET_FEATURES 0x31
