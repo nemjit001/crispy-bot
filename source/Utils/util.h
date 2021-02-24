@@ -45,7 +45,7 @@ point convert_point(int x, int y) {
 
 double vector_to_angle(double x0, double y0, double x1, double y1){
     double x = x1 - x0;
-    double y = y0 - y1;
+    double y = y1 - y0;
 
     return (atan2(x, y) / M_PI) * 180.0;
 }
