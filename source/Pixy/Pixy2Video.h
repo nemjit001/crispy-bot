@@ -37,6 +37,7 @@
 //
 
 #include "Modules/mDelay.h"
+#include "Utils/util.h"
 
 #ifndef _PIXY2VIDEO_H
 #define _PIXY2VIDEO_H
@@ -66,11 +67,22 @@ int8_t Pixy2Video<LinkType>::getRGB(uint16_t x, uint16_t y, uint8_t *r, uint8_t 
 {
   while (1)
   {
+    print_string("LOOP\n\r");
+    print_string("STUCK?\n\r");
+
+    char test[64];
+    sprintf(test, "%p, %d\n\r", m_pixy->m_bufPayload, x);
+    print_string(test);
+
     *(int16_t *)(m_pixy->m_bufPayload + 0) = x;
+    print_string("STUCK?\n\r");
     *(int16_t *)(m_pixy->m_bufPayload + 2) = y;
+    print_string("STUCK?\n\r");
     *(m_pixy->m_bufPayload + 4) = saturate;
     m_pixy->m_length = 5;
+    print_string("STUCK?\n\r");
     m_pixy->m_type = VIDEO_REQUEST_GET_RGB;
+    print_string("STUCK?\n\r");
     m_pixy->sendPacket();
     if (m_pixy->recvPacket() == 0)
     {

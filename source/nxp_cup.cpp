@@ -87,6 +87,12 @@ extern "C"
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
+struct Features{
+	point p0;
+	point p1;
+	double angle = 0.00;
+} prev_feature; 
+
 // line camera
 static Pixy2SPI_SS pixy;
 
@@ -129,12 +135,13 @@ void normal_run()
   	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
   	print_string(test_str2);*/
 
-		//point p0 = convert_point(pixy.line.vectors[i].m_x0, pixy.line.vectors[i].m_y0);
-		//point p1 = convert_point(pixy.line.vectors[i].m_x1, pixy.line.vectors[i].m_y1);
+		point p0 = convert_point(pixy.line.vectors[0].m_x0, pixy.line.vectors[0].m_y0);
+		point p1 = convert_point(pixy.line.vectors[0].m_x1, pixy.line.vectors[0].m_y1);
 
+	//pixy.getResolution();
 	char data1[64];
-	double angle1 = vector_to_angle(pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1);
-	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d\r\n", pixy.line.vectors->m_x0, pixy.line.vectors->m_y0, pixy.line.vectors->m_x1, pixy.line.vectors->m_y1, (int)angle1);
+	double angle1 = vector_to_angle(p0.x, p0.y, p1.x, p1.y);
+	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d reso: %d x %d\r\n", (int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, (int)angle1, pixy.frameWidth, pixy.frameHeight);
 
 	print_string(data1);
 
@@ -143,7 +150,12 @@ void normal_run()
 
 	print_string(data2);
 
-	set_servo(angle1);
+	if(angle1 > prev_feature.angle + 5 || angle1 < prev_feature.angle - 5){
+		set_servo(angle1);
+		prev_feature.angle = angle1;
+		prev_feature.p0 = p0;
+		prev_feature.p1 = p1;
+	}
 }
 
 void display_battery_level()
