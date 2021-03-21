@@ -34,45 +34,7 @@
  * @brief   Application entry point.
  */
 
-extern "C"
-{
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "board.h"
-#include "peripherals.h"
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "MK64F12.h"
-#include "fsl_debug_console.h"
-#include "Utils/def.h"
-
-#include "Modules/mSpi.h"
-#include "Modules/mDac.h"
-#include "Modules/mAccelMagneto.h"
-#include "Modules/mGyro.h"
-#include "Modules/mTimer.h"
-#include "Modules/mCpu.h"
-#include "Modules/mSwitch.h"
-#include "Modules/mLeds.h"
-#include "Modules/mAd.h"
-#include "Modules/mDelay.h"
-#include "Modules/mRS232.h"
-#include "Modules/mVL6180x.h"
-
-#include "Applications/gInput.h"
-#include "Applications/gCompute.h"
-#include "Applications/gOutput.h"
-}
-
-/* Pixy 2 */
-#include "Pixy/Pixy2SPI_SS.h"
-//#include "Pixy/Pixy2line.h"
-
-/* Own modules */
-#include "servo_module.h"
-#include "engine_module.h"
+#include "nxp_cup.h"
 
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
@@ -81,50 +43,10 @@ extern "C"
 #define _CHECK_CAM		0b00000100
 #define _PAUSE_ALL		0b00001000
 
-#define STEP_PER_DEGREE 2 / 180
+#define STEP_PER_DEGREE 2 / 84
 #define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
-
-class rover
-{
-private:
-    Pixy2SPI_SS pixy;
-    servoModule *servo;
-    engineModule *engines;
-public:
-    rover() {
-        servo = new servoModule(servoPort1);
-        engines = new engineModule();
-        pixy.init();
-        pixy.setLED(0, 255, 0);
-
-		this->servo->setRotation(0.0);
-		this->engines->setSpeed(0.0, 0.0);
-    }
-
-    ~rover()
-    {
-        delete servo;
-        delete engines;
-    }
-
-    inline void step() {
-		float servo_rot = mAd_Read(kPot2);
-		float engine_speed = mAd_Read(kPot1);
-		this->engines->setSpeed(engine_speed, engine_speed);
-		this->servo->setRotation(servo_rot);
-	};
-
-	inline Pixy2SPI_SS &getPixy() { return this->pixy; };
-};
-
-void test_engines()
-{
-	static engineModule engine;
-
-	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
-}
 
 void leds_off()
 {
@@ -134,25 +56,28 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void cam_test(Pixy2SPI_SS &pixy)
+void rover::set_steering_angle()
 {
-	test_engines();
+	engine_kpod();
 	static servoModule servo(servoPort1);
 
-	pixy.line.getMainFeatures();
-	for(int i = 0; i < pixy.line.numVectors; i++) pixy.line.vectors[i].print();
+	pixy.line.getAllFeatures();
+	for(int i = 0; i < pixy.line.numVectors; i++){
+		pixy.line.vectors[i].print();
 
-  	/*
-	char test_str2[32];
-	pixy.getResolution(); 
-  	sprintf(test_str2, "numVectors: %d; resolution: %d x %d\n\r", pixy.line.numVectors, pixy.frameHeight, pixy.frameWidth);
-  	print_string(test_str2);
-	*/
+		if(pixy.line.vectors[0].m_y1 > pixy.line.vectors[0].m_y0){
+			int temp = pixy.line.vectors[0].m_x0;
+			int temp2 = pixy.line.vectors[0].m_y0;
+			pixy.line.vectors[0].m_x0 = pixy.line.vectors[0].m_x1;
+			pixy.line.vectors[0].m_y0 = pixy.line.vectors[0].m_y1;
+			pixy.line.vectors[0].m_x1 = temp;
+			pixy.line.vectors[0].m_y1 = temp2;
+		}
+	}
 
-		point p0 = convert_point(pixy.line.vectors[0].m_x0, pixy.line.vectors[0].m_y0);
-		point p1 = convert_point(pixy.line.vectors[0].m_x1, pixy.line.vectors[0].m_y1);
+	point p0 = convert_point(pixy.line.vectors[0].m_x0, pixy.line.vectors[0].m_y0);
+	point p1 = convert_point(pixy.line.vectors[0].m_x1, pixy.line.vectors[0].m_y1);
 
-	//pixy.getResolution();
 	char data1[64];
 	double angle1 = vector_to_angle(p0.x, p0.y, p1.x, p1.y);
 	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d reso: %d x %d\r\n", (int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, (int)angle1, pixy.frameWidth, pixy.frameHeight);
@@ -164,12 +89,48 @@ void cam_test(Pixy2SPI_SS &pixy)
 
 	print_string(data2);
 
-	if(angle1 > prev_feature.angle + 5 || angle1 < prev_feature.angle - 5){
+	if(clear_to_steer(angle1)){
 		set_servo(angle1);
-		prev_feature.angle = angle1;
-		prev_feature.p0 = p0;
-		prev_feature.p1 = p1;
+		prev_angle = angle1;
+		prev_p0 = p0;
+		prev_p1 = p1;
+		prev_x0 = pixy.line.vectors[0].m_x0;
+		prev_y0 = pixy.line.vectors[0].m_y0;
 	}
+}
+
+void rover::set_servo(double angle){
+	servo->setRotation(angle * STEP_PER_DEGREE);
+}
+
+//Returns 1 if starting point of vector is on the right of the centre and 0 if it is on the left.
+int rover::feature_left_right(int vector_start){
+	int centre = pixy.frameWidth / 2;
+
+	if(vector_start < centre) return 0;
+	else if (vector_start > centre) return 1;
+}
+
+void rover::engine_kpod()
+{ 
+	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
+}
+
+bool rover::clear_to_steer(int angle){
+	if (angle < 0){
+		for(int i = 1; i < pixy.line.numVectors; i++){
+			if(feature_left_right(pixy.line.vectors[i].m_x0) == 0 && pixy.line.vectors[i].m_y1 < (pixy.frameHeight * 0.75)) return false;
+			else return true;
+		}
+	}
+	else if (angle > 0) {
+		for(int i = 1; i < pixy.line.numVectors; i++){
+			if(feature_left_right(pixy.line.vectors[i].m_x0) == 1 && pixy.line.vectors[i].m_y1 < (pixy.frameHeight * 0.75)) return false;
+			else return true;
+		}
+	}
+	
+	return false;
 }
 
 void display_battery_level()
@@ -191,9 +152,8 @@ void display_battery_level()
 	}
 }
 
-void test_servo()
+void rover::test_servo()
 {
-	static servoModule servo(servoPort1);
 	static float duty = 0.0;
 	bool 	btn1 = mSwitch_ReadPushBut(kPushButSW1),
 			btn2 = mSwitch_ReadPushBut(kPushButSW2);
@@ -201,7 +161,7 @@ void test_servo()
 	if (btn1 && btn2)
 	{
 		duty = 0;
-		servo.setRotation(duty);
+		servo->setRotation(duty);
 		return;
 	}
 
@@ -218,7 +178,7 @@ void test_servo()
 			duty = -1;
 	}
 
-	servo.setRotation(duty);
+	servo->setRotation(duty);
 }
 
 uint8_t get_switch_state()
@@ -329,15 +289,15 @@ int main(void)
 			break;
 		case _CHECK_SERVO:
 			mLeds_Write(kMaskLed1, kLedOn);
-			test_servo();
+			car.test_servo();
 			break;
-		case _CHECK_ENGINE:
+		/*case _CHECK_ENGINE:
 			mLeds_Write(kMaskLed4, kLedOn);
 			test_engines();
 			break;
 		case _CHECK_CAM:
 			mLeds_Write(kMaskLed3, kLedOn);
-			cam_test(test_pixy);
+			cam_test(test_pixy);*/
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);

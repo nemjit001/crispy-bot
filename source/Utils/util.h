@@ -4,12 +4,12 @@
 #include "Modules/mRS232.h"
 #include "math.h"
 
-#define CAM_HEIGHT 30.5
-#define CAM_ANGLE (62 * M_PI / 180.0)
+#define CAM_HEIGHT 31.0
+#define CAM_ANGLE (42.1 * M_PI / 180.0)
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
-#define RES_X 316
-#define RES_Y 208
+#define RES_X 79
+#define RES_Y 52
 
 typedef struct {
     double x;
