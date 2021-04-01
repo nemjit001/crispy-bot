@@ -56,52 +56,79 @@ void leds_off()
 	mLeds_Write(kMaskLed4, kLedOff);
 }
 
-void rover::set_steering_angle()
+static float quadraticCurve(float offset, float a, float b) {
+    int sign = (offset < 0 ? -1 : 1);
+
+    return sign * a * pow(abs(offset), b);
+}
+
+void rover::setCamData()
 {
+	uint8_t r, g, b;
+
+	for (int i = 0; i < x; i++) {
+		pixy.video.getRGB(i, y, &r, &g, &b, 0);
+		camData[i] = (r + g + b) / 3;
+	}
+}
+
+void rover::setMid() {
+	firstEdge = findEdge(camData, mid, -1);
+	secEdge = findEdge(camData, mid, x);
+
+	if (firstEdge == -1) firstEdge = 0;
+	if (secEdge == -1) secEdge = x - 1;
+
+    mid = (firstEdge + secEdge) / 2.0;
+}
+
+void rover::setWheels() {
+	float offset, deg;
+
+    offset = (mid - x / 2.0) / (x / 2.0);
+    offset *= (lineWidth / 2.0);
+
+    deg = atan2(offset, LINE_DIST);
+
+    offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+    if (offset > 1) offset = 1;
+    else if (offset < -1) offset = -1;
+    
+    servo->setRotation(offset);
+}
+
+int rover::findEdge(uint8_t camData[], int start, int stop) {
+    int diff = 0, i = start;
+    int sign = (start < stop) ? 1 : -1;
+
+    while (i != stop) {
+        diff = sign * (camData[i] - camData[i + 1]);
+        if (diff >= threshold) {
+            return i;
+        }
+        i += sign;
+    }
+
+    return -1;
+}
+
+void rover::setSpeed() {
 	engine_kpod();
-	static servoModule servo(servoPort1);
-
-	pixy.line.getAllFeatures();
-	for(int i = 0; i < pixy.line.numVectors; i++){
-		pixy.line.vectors[i].print();
-
-		if(pixy.line.vectors[0].m_y1 > pixy.line.vectors[0].m_y0){
-			int temp = pixy.line.vectors[0].m_x0;
-			int temp2 = pixy.line.vectors[0].m_y0;
-			pixy.line.vectors[0].m_x0 = pixy.line.vectors[0].m_x1;
-			pixy.line.vectors[0].m_y0 = pixy.line.vectors[0].m_y1;
-			pixy.line.vectors[0].m_x1 = temp;
-			pixy.line.vectors[0].m_y1 = temp2;
-		}
-	}
-
-	point p0 = convert_point(pixy.line.vectors[0].m_x0, pixy.line.vectors[0].m_y0);
-	point p1 = convert_point(pixy.line.vectors[0].m_x1, pixy.line.vectors[0].m_y1);
-
-	char data1[64];
-	double angle1 = vector_to_angle(p0.x, p0.y, p1.x, p1.y);
-	sprintf(data1, "vector: (%d %d) (%d %d) angle: %d reso: %d x %d\r\n", (int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, (int)angle1, pixy.frameWidth, pixy.frameHeight);
-
-	print_string(data1);
-
-	char data2[64];
-	sprintf(data2, "------------------------------------------------\n\r");
-
-	print_string(data2);
-
-	if(clear_to_steer(angle1)){
-		set_servo(angle1);
-		prev_angle = angle1;
-		prev_p0 = p0;
-		prev_p1 = p1;
-		prev_x0 = pixy.line.vectors[0].m_x0;
-		prev_y0 = pixy.line.vectors[0].m_y0;
-	}
 }
 
-void rover::set_servo(double angle){
-	servo->setRotation(angle * STEP_PER_DEGREE);
+void rover::setThreshold() {
+	int total = 0;
+
+	for (int i = 0; i < x; i++) {
+		total += camData[i];
+	}
+
+	threshold = 0.075 * total / (float)x;
 }
+
+// void rover::set_servo(double angle){
+// 	servo->setRotation(angle * STEP_PER_DEGREE);
+// }
 
 //Returns 1 if starting point of vector is on the right of the centre and 0 if it is on the left.
 int rover::feature_left_right(int vector_start){
@@ -181,6 +208,21 @@ void rover::test_servo()
 	servo->setRotation(duty);
 }
 
+void rover::printCamData() {
+	char buf[32];
+
+	sprintf(buf, "%d,", x);
+    print_string(buf);
+
+    for (int i = 0; i < x; i++) {
+		sprintf(buf, "%d,", camData[i]);
+        print_string(buf);
+    }
+
+    sprintf(buf, "%d,%d,%d,\r\n", int(mid), firstEdge, secEdge);
+	print_string(buf);
+}
+
 uint8_t get_switch_state()
 {
 	return 0x0 |
@@ -195,7 +237,7 @@ void board_device_setup()
 	//--------------------------------------------------------------------
 	// Device and card setup
 	//--------------------------------------------------------------------
-	// PLL Config --> CPU 100MHz, bus and periph 50MH z
+	// PLL Config --> CPU 100MHz, bus and periph 50MHz
 	mCpu_Setup();
 
 	// Config and start switches and pushers
@@ -252,7 +294,7 @@ void board_device_setup()
 int main(void)
 {
 	board_device_setup();
-	print_string("INITIALIZING BOARD\n\r\0");
+	// print_string("INITIALIZING BOARD\n\r\0");
 
 	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
@@ -306,6 +348,8 @@ int main(void)
 		default:
 			break;
 		}
+
+		// car.test_rgb();
 	}
 
 	return 0;

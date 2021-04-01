@@ -141,14 +141,14 @@ public:
   friend class Pixy2Video<LinkType>;
 
   LinkType m_link;
-  uint8_t *m_buf;
+  // uint8_t *m_buf;
 
 private:
   int16_t getSync();
   int16_t recvPacket();
   int16_t sendPacket();
 
-  //uint8_t *m_buf;
+  uint8_t *m_buf;
   uint8_t *m_bufPayload;
   uint8_t m_type;
   uint8_t m_length;
