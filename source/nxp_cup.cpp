@@ -43,7 +43,7 @@
 #define _CHECK_CAM		0b00000100
 #define _PAUSE_ALL		0b00001000
 
-#define STEP_PER_DEGREE 2 / 84
+#define STEERING_RANGE 84
 #define DEBUG_PRINT_ENABLED 1
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
@@ -55,6 +55,13 @@ void leds_off()
 	mLeds_Write(kMaskLed3, kLedOff);
 	mLeds_Write(kMaskLed4, kLedOff);
 }
+
+static float quadraticCurve(float offset, float a, float b) {
+    int sign = (offset < 0 ? -1 : 1);
+
+    return sign * a * pow(abs(offset), b);
+}
+
 
 void rover::set_steering_angle()
 {
@@ -89,18 +96,18 @@ void rover::set_steering_angle()
 
 	print_string(data2);
 
-	if(clear_to_steer(angle1)){
-		set_servo(angle1);
-		prev_angle = angle1;
-		prev_p0 = p0;
-		prev_p1 = p1;
-		prev_x0 = pixy.line.vectors[0].m_x0;
-		prev_y0 = pixy.line.vectors[0].m_y0;
-	}
+	angle1 = quadraticCurve(angle1 / STEERING_RANGE, 1.4, 1.7);
+
+	set_servo(angle1);
+	prev_angle = angle1;
+	prev_p0 = p0;
+	prev_p1 = p1;
+	prev_x0 = pixy.line.vectors[0].m_x0;
+	prev_y0 = pixy.line.vectors[0].m_y0;
 }
 
 void rover::set_servo(double angle){
-	servo->setRotation(angle * STEP_PER_DEGREE);
+	servo->setRotation(angle);
 }
 
 //Returns 1 if starting point of vector is on the right of the centre and 0 if it is on the left.
