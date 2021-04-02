@@ -59,7 +59,7 @@ static float quadraticCurve(float offset, float a, float b) {
     return sign * a * pow(abs(offset), b);
 }
 
-void rover::setCamData(int y, uint8_t *camData)
+void rover::setCamData(int y, uint8_t camData[])
 {
 	uint8_t r, g, b;
 
@@ -72,13 +72,13 @@ void rover::setCamData(int y, uint8_t *camData)
 void rover::setMid() {
 	firstEdge = findEdge(camData1, mid1, -1);
 	secEdge = findEdge(camData1, mid1, res_x);
-	thirdEdge = findEdge(camData2, mid2, res_x);
+	thirdEdge = findEdge(camData2, mid2, -1);
 	fourEdge = findEdge(camData2, mid2, res_x);
 
 	if (firstEdge == -1) firstEdge = 0;
 	if (secEdge == -1) secEdge = res_x - 1;
-	if (thirdEdge == -1) firstEdge = 0;
-	if (fourEdge == -1) secEdge = res_x - 1;
+	if (thirdEdge == -1) thirdEdge = 0;
+	if (fourEdge == -1) fourEdge = res_x - 1;
 
     mid1 = (firstEdge + secEdge) / 2.0;
 	mid2 = (thirdEdge + fourEdge) / 2.0;

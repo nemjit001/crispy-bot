@@ -76,7 +76,7 @@ private:
     void setWheels();
     void setSpeed();
     void setThreshold();
-    void setCamData(int y, uint8_t *camData);
+    void setCamData(int y, uint8_t camData[]);
     void printCamData();
 
 public:
@@ -90,10 +90,12 @@ public:
 
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
-        line1 = res_y * (3/4);
-        line2 = res_y * (1/4);
+        line1 = res_y * 3/4;
+        line2 = res_y * 1/4;
         mid1 = res_x / 2.0;
         mid2 = res_x / 2.0;
+
+        printf("line1: %d\n", line1);
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -117,7 +119,7 @@ public:
         setMid();
 		setWheels();
         setSpeed();
-        // printCamData();
+        printCamData();
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
