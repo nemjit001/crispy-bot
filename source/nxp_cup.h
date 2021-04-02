@@ -64,6 +64,7 @@ private:
     int firstEdge, secEdge;
     uint8_t *camData;
     float speed;
+    int finished;
 
     void set_steering_angle();
     void engine_kpod();
@@ -78,6 +79,7 @@ private:
     void setThreshold();
     void setCamData();
     void printCamData();
+    void checkFinish();
 
 public:
     rover() {
@@ -87,6 +89,8 @@ public:
 
 		servo->setRotation(0.0);
 		engine.setSpeed(0.0, 0.0);
+
+        finished = 0;
 
         x = pixy.frameWidth;
         y = pixy.frameHeight * 3/4;
@@ -105,12 +109,18 @@ public:
     void test_rgb();
 
     void step() {
-        setCamData();
-        setThreshold();
-        setMid();
-		setWheels();
-        setSpeed();
-        // printCamData();
+        if(finished){
+            setCamData();
+            setThreshold();
+            setMid();
+            checkFinish();
+            setWheels();
+            setSpeed();
+            // printCamData();
+        }
+        else{
+            engine.setSpeed(0.0, 0.0);
+        }
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };

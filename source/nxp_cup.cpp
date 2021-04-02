@@ -72,6 +72,10 @@ void rover::setCamData()
 	}
 }
 
+void rover::checkFinish(){
+	if(secEdge - firstEdge < 50) finished = 1;
+}
+
 void rover::setMid() {
 	firstEdge = findEdge(camData, mid, -1);
 	secEdge = findEdge(camData, mid, x);
