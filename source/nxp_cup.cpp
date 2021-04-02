@@ -39,8 +39,6 @@
 #define _NORMAL_RUN		0b00000000
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
-#define _CHECK_ENGINE	0b00000011
-#define _CHECK_CAM		0b00000100
 #define _PAUSE_ALL		0b00001000
 
 #define DEBUG_PRINT_ENABLED 1
@@ -348,22 +346,17 @@ int main(void)
 			car.step();
 			break;
 		case _CHECK_BATTERY:
+			car.stop();
 			display_battery_level();
 			break;
 		case _CHECK_SERVO:
 			mLeds_Write(kMaskLed1, kLedOn);
+			car.stop();
 			car.test_servo();
-			break;
-		/*case _CHECK_ENGINE:
-			mLeds_Write(kMaskLed4, kLedOn);
-			test_engines();
-			break;
-		case _CHECK_CAM:
-			mLeds_Write(kMaskLed3, kLedOn);
-			cam_test(test_pixy);*/
 			break;
 		case _PAUSE_ALL:
 			mLeds_Write(kMaskLed2, kLedOn);
+			car.stop();
 			__asm("nop");
 			break;
 		default:

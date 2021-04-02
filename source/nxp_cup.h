@@ -117,7 +117,7 @@ public:
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
 
-
+    void stop() { this->engine.setSpeed(0.0f, 0.0f); };
 };
 
 #endif
