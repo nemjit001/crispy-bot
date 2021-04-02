@@ -60,7 +60,7 @@ private:
     float mid;
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     float threshold;
-    int x, y;
+    int res_x, res_y, line1, line2;
     int firstEdge, secEdge;
     uint8_t *camData;
     float speed;
@@ -76,7 +76,7 @@ private:
     void setWheels();
     void setSpeed();
     void setThreshold();
-    void setCamData();
+    void setCamData(int y);
     void printCamData();
 
 public:
@@ -88,8 +88,10 @@ public:
 		servo->setRotation(0.0);
 		engine.setSpeed(0.0, 0.0);
 
-        x = pixy.frameWidth;
-        y = pixy.frameHeight * 3/4;
+        res_x = pixy.frameWidth;
+        res_y = pixy.frameHeight;
+        line1 = res_y * (3/4);
+        line2 = res_y * (1/4);
         mid = x / 2.0;
 
         camData = (uint8_t*)malloc(x * sizeof(uint8_t));

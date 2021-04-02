@@ -61,11 +61,11 @@ static float quadraticCurve(float offset, float a, float b) {
     return sign * a * pow(abs(offset), b);
 }
 
-void rover::setCamData()
+void rover::setCamData(int y, )
 {
 	uint8_t r, g, b;
 
-	for (int i = 0; i < x; i++) {
+	for (int i = 0; i < res_x; i++) {
 		pixy.video.getRGB(i, y, &r, &g, &b, 0);
 		camData[i] = (r + g + b) / 3;
 	}
