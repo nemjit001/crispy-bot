@@ -57,12 +57,12 @@ private:
 	double prev_angle;
 	int prev_x0, prev_y0;
 	point prev_p0, prev_p1;
-    float mid;
+    float mid1, mid2;
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     float threshold;
     int res_x, res_y, line1, line2;
-    int firstEdge, secEdge;
-    uint8_t *camData;
+    int firstEdge, secEdge, thirdEdge, fourEdge;
+    uint8_t *camData1, *camData2;
     float speed;
 
     void set_steering_angle();
@@ -76,7 +76,7 @@ private:
     void setWheels();
     void setSpeed();
     void setThreshold();
-    void setCamData(int y);
+    void setCamData(int y, uint8_t *camData);
     void printCamData();
 
 public:
@@ -92,23 +92,28 @@ public:
         res_y = pixy.frameHeight;
         line1 = res_y * (3/4);
         line2 = res_y * (1/4);
-        mid = x / 2.0;
+        mid1 = res_x / 2.0;
+        mid2 = res_x / 2.0;
 
-        camData = (uint8_t*)malloc(x * sizeof(uint8_t));
+        camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
+        camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
+
+        threshold = 10;
     }
 
     ~rover()
     {
         delete servo;
-        free(camData);
+        free(camData1);
+        free(camData2);
     }
 
     void test_servo();
     void test_rgb();
 
     void step() {
-        setCamData();
-        setThreshold();
+        setCamData(line1, camData1);
+        setCamData(line2, camData2);
         setMid();
 		setWheels();
         setSpeed();

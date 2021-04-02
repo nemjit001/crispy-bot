@@ -59,7 +59,7 @@ static float quadraticCurve(float offset, float a, float b) {
     return sign * a * pow(abs(offset), b);
 }
 
-void rover::setCamData(int y, )
+void rover::setCamData(int y, uint8_t *camData)
 {
 	uint8_t r, g, b;
 
@@ -70,19 +70,27 @@ void rover::setCamData(int y, )
 }
 
 void rover::setMid() {
-	firstEdge = findEdge(camData, mid, -1);
-	secEdge = findEdge(camData, mid, x);
+	firstEdge = findEdge(camData1, mid1, -1);
+	secEdge = findEdge(camData1, mid1, res_x);
+	thirdEdge = findEdge(camData2, mid2, res_x);
+	fourEdge = findEdge(camData2, mid2, res_x);
 
 	if (firstEdge == -1) firstEdge = 0;
-	if (secEdge == -1) secEdge = x - 1;
+	if (secEdge == -1) secEdge = res_x - 1;
+	if (thirdEdge == -1) firstEdge = 0;
+	if (fourEdge == -1) secEdge = res_x - 1;
 
-    mid = (firstEdge + secEdge) / 2.0;
+    mid1 = (firstEdge + secEdge) / 2.0;
+	mid2 = (thirdEdge + fourEdge) / 2.0;
 }
 
 void rover::setWheels() {
 	float offset, deg;
 
-    offset = (mid - x / 2.0) / (x / 2.0);
+	//if (mid2 > mid1 + 5) mid1 =- 5;
+	//else if (mid2 < mid1 - 5) mid1 =+ 5; 
+
+    offset = (mid1 - res_x / 2.0) / (res_x / 2.0);
     offset *= (lineWidth / 2.0);
 
     deg = atan2(offset, LINE_DIST);
@@ -112,19 +120,19 @@ int rover::findEdge(uint8_t data[], int start, int stop) {
 }
 
 void rover::setSpeed() {
-	uint8_t data[y];
+	uint8_t data[line1];
 	uint8_t r, g, b;
 
-	for (int i = 0; i < y; i++) {
-		pixy.video.getRGB(x / 2, y - i - 1, &r, &g, &b, 0);
+	for (int i = 0; i < line1; i++) {
+		pixy.video.getRGB(res_x / 2, line1 - i - 1, &r, &g, &b, 0);
 		data[i] = (r + g + b) / 3;
 	}
 
-	int edge = findEdge(data, 0, y - 1);
+	int edge = findEdge(data, 0, line1 - 1);
 
 	if (edge == -1) speed = 0.50;
 	else {
-		float temp = edge / float(y);
+		float temp = edge / float(line1);
 		speed = 0.42 + 0.05 * temp;
 	}
 
@@ -133,28 +141,10 @@ void rover::setSpeed() {
 	engine.setSpeed(-speed, -speed);
 }
 
-void rover::setThreshold() {
-	int total = 0;
-
-	for (int i = 0; i < x - 1; i++) {
-		total += camData[i] - camData[i + 1];
-	}
-
-	// threshold = 10 + 0.025 * total / (float)x;
-	threshold = 10;
-}
-
 // void rover::set_servo(double angle){
 // 	servo->setRotation(angle * STEP_PER_DEGREE);
 // }
 
-//Returns 1 if starting point of vector is on the right of the centre and 0 if it is on the left.
-int rover::feature_left_right(int vector_start){
-	int centre = pixy.frameWidth / 2;
-
-	if(vector_start < centre) return 0;
-	else if (vector_start > centre) return 1;
-}
 
 void rover::engine_kpod()
 { 
@@ -230,15 +220,15 @@ void rover::test_servo()
 void rover::printCamData() {
 	char buf[32];
 
-	sprintf(buf, "%d,", x);
+	sprintf(buf, "%d,", res_x);
     print_string(buf);
 
-    for (int i = 0; i < x; i++) {
-		sprintf(buf, "%d,", camData[i]);
+    for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData1[i]);
         print_string(buf);
     }
 
-    sprintf(buf, "%d,%d,%d,\r\n", int(mid), firstEdge, secEdge);
+    sprintf(buf, "%d,%d,%d,\r\n", int(mid1), firstEdge, secEdge);
 	print_string(buf);
 }
 
