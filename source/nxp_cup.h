@@ -57,12 +57,12 @@ private:
 	double prev_angle;
 	int prev_x0, prev_y0;
 	point prev_p0, prev_p1;
-    float mid;
+    float mid1, mid2;
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     float threshold;
-    int x, y;
-    int firstEdge, secEdge;
-    uint8_t *camData;
+    int res_x, res_y, line1, line2;
+    int firstEdge, secEdge, thirdEdge, fourEdge;
+    uint8_t *camData1, *camData2;
     float speed;
     int finished;
 
@@ -77,7 +77,7 @@ private:
     void setWheels();
     void setSpeed();
     void setThreshold();
-    void setCamData();
+    void setCamData(int y, uint8_t *camData);
     void printCamData();
     void checkFinish();
 
@@ -90,42 +90,46 @@ public:
 		servo->setRotation(0.0);
 		engine.setSpeed(0.0, 0.0);
 
-        finished = 0;
+        res_x = pixy.frameWidth;
+        res_y = pixy.frameHeight;
+        line1 = res_y * (3/4);
+        line2 = res_y * (1/4);
+        mid1 = res_x / 2.0;
+        mid2 = res_x / 2.0;
 
-        x = pixy.frameWidth;
-        y = pixy.frameHeight * 3/4;
-        mid = x / 2.0;
+        camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
+        camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
 
-        camData = (uint8_t*)malloc(x * sizeof(uint8_t));
+        threshold = 10;
     }
 
     ~rover()
     {
         delete servo;
-        free(camData);
+        free(camData1);
+        free(camData2);
     }
 
     void test_servo();
     void test_rgb();
 
     void step() {
-        if(finished){
-            setCamData();
-            setThreshold();
+        if(finished == 0){
+            setCamData(line1, camData1);
+            setCamData(line2, camData2);
             setMid();
-            checkFinish();
             setWheels();
             setSpeed();
             // printCamData();
         }
-        else{
+        else {
             engine.setSpeed(0.0, 0.0);
         }
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
 
-
+    void stop() { this->engine.setSpeed(0.0f, 0.0f); };
 };
 
 #endif
