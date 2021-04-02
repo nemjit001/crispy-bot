@@ -67,22 +67,15 @@ int8_t Pixy2Video<LinkType>::getRGB(uint16_t x, uint16_t y, uint8_t *r, uint8_t 
 {
   while (1)
   {
-    print_string("LOOP\n\r");
-    print_string("STUCK?\n\r");
-
-    char test[64];
-    sprintf(test, "%p, %d\n\r", m_pixy->m_bufPayload, x);
-    print_string(test);
+    // char test[64];
+    // sprintf(test, "%p, %d\n\r", m_pixy->m_bufPayload, x);
+    // print_string(test);
 
     *(int16_t *)(m_pixy->m_bufPayload + 0) = x;
-    print_string("STUCK?\n\r");
     *(int16_t *)(m_pixy->m_bufPayload + 2) = y;
-    print_string("STUCK?\n\r");
     *(m_pixy->m_bufPayload + 4) = saturate;
     m_pixy->m_length = 5;
-    print_string("STUCK?\n\r");
     m_pixy->m_type = VIDEO_REQUEST_GET_RGB;
-    print_string("STUCK?\n\r");
     m_pixy->sendPacket();
     if (m_pixy->recvPacket() == 0)
     {
@@ -96,10 +89,12 @@ int8_t Pixy2Video<LinkType>::getRGB(uint16_t x, uint16_t y, uint8_t *r, uint8_t 
       // deal with program changing
       else if (m_pixy->m_type == PIXY_TYPE_RESPONSE_ERROR && (int8_t)m_pixy->m_buf[0] == PIXY_RESULT_PROG_CHANGING)
       {
+        print_string("Error\n\r");
         usleep(500); // don't be a drag
         continue;
       }
     }
+
     return PIXY_RESULT_ERROR;
   }
 }
