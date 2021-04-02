@@ -90,19 +90,21 @@ void rover::setWheels() {
 
     deg = atan2(offset, LINE_DIST);
 
-    offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+    offset = quadraticCurve(deg / STEERING_RANGE, 4 - ((speed - 0.42) * 30), 2);
     if (offset > 1) offset = 1;
     else if (offset < -1) offset = -1;
+
+	offset = offset * 0.9 + 0.1;
     
     servo->setRotation(offset);
 }
 
-int rover::findEdge(uint8_t camData[], int start, int stop) {
+int rover::findEdge(uint8_t data[], int start, int stop) {
     int diff = 0, i = start;
     int sign = (start < stop) ? 1 : -1;
 
     while (i != stop) {
-        diff = sign * (camData[i] - camData[i + 1]);
+        diff = sign * (data[i] - data[i + 1]);
         if (diff >= threshold) {
             return i;
         }
@@ -113,7 +115,25 @@ int rover::findEdge(uint8_t camData[], int start, int stop) {
 }
 
 void rover::setSpeed() {
-	engine_kpod();
+	uint8_t data[y];
+	uint8_t r, g, b;
+
+	for (int i = 0; i < y; i++) {
+		pixy.video.getRGB(x / 2, y - i - 1, &r, &g, &b, 0);
+		data[i] = (r + g + b) / 3;
+	}
+
+	int edge = findEdge(data, 0, y - 1);
+
+	if (edge == -1) speed = 0.50;
+	else {
+		float temp = edge / float(y);
+		speed = 0.42 + 0.05 * temp;
+	}
+
+	speed = 0.42;
+
+	engine.setSpeed(-speed, -speed);
 }
 
 void rover::setThreshold() {
@@ -123,7 +143,8 @@ void rover::setThreshold() {
 		total += camData[i];
 	}
 
-	threshold = 0.075 * total / (float)x;
+	// threshold = 10 + 0.025 * total / (float)x;
+	threshold = 10;
 }
 
 // void rover::set_servo(double angle){
@@ -141,6 +162,7 @@ int rover::feature_left_right(int vector_start){
 void rover::engine_kpod()
 { 
 	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
+	printf("kPot1: %d\n", (int)(mAd_Read(kPot1) * 1000));
 }
 
 bool rover::clear_to_steer(int angle){

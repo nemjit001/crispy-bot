@@ -63,7 +63,7 @@ private:
     int x, y;
     int firstEdge, secEdge;
     uint8_t *camData;
-    auto lastTime;
+    float speed;
 
     void set_steering_angle();
     void engine_kpod();
@@ -89,7 +89,7 @@ public:
 		engine.setSpeed(0.0, 0.0);
 
         x = pixy.frameWidth;
-        y = pixy.frameHeight / 2;
+        y = pixy.frameHeight * 3/4;
         mid = x / 2.0;
 
         camData = (uint8_t*)malloc(x * sizeof(uint8_t));
@@ -110,7 +110,7 @@ public:
         setMid();
 		setWheels();
         setSpeed();
-        printCamData();
+        // printCamData();
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };

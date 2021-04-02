@@ -404,7 +404,8 @@ void UART_GetDefaultConfig(uart_config_t *config)
     /* Initializes the configure structure to zero. */
     (void)memset(config, 0, sizeof(*config));
 
-    config->baudRate_Bps = 115200U;
+    // config->baudRate_Bps = 115200U;
+    config->baudRate_Bps = 921600U;
     config->parityMode   = kUART_ParityDisabled;
 #if defined(FSL_FEATURE_UART_HAS_STOP_BIT_CONFIG_SUPPORT) && FSL_FEATURE_UART_HAS_STOP_BIT_CONFIG_SUPPORT
     config->stopBitCount = kUART_OneStopBit;
