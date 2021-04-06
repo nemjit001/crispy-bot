@@ -79,15 +79,16 @@ static float quadraticCurve(float offset, float a, float b) {
 
 void rover::getCamData(int y, uint8_t camData[])
 {
-	uint8_t r, g, b;
+	uint8_t rgb[3];
 
 	for (int i = 0; i < res_x; i++) {
-		pixy.video.getRGB(i, y, &r, &g, &b, 0);
-		camData[i] = (r + g + b) / 3;
+		pixy.video.getRGB(i, y, &rgb[0], &rgb[1], &rgb[2], 0);
+
+		camData[i] = (rgb[0] + rgb[1] + rgb[2]) / 3;
 	}
 }
 
-float rover::getMid(uint8_t camData[], float mid) {
+void rover::getMid(uint8_t camData[], float &mid) {
 	int firstEdge, secEdge;
 
 	firstEdge = findEdge(camData, mid, -1);
@@ -96,7 +97,7 @@ float rover::getMid(uint8_t camData[], float mid) {
 	if (firstEdge == -1) firstEdge = 0;
 	if (secEdge == -1) secEdge = res_x - 1;
 
-    return (firstEdge + secEdge) / 2.0;
+    mid = (firstEdge + secEdge) / 2.0;
 }
 
 void rover::setWheels(float mid) {
@@ -133,12 +134,20 @@ int rover::findEdge(uint8_t data[], int start, int stop) {
 }
 
 void rover::setSpeed(int depth) {
-	float speed;
+	if (depth == -1)
+	{
+		currentSpeed *= SPEED_INCREASE_FACTOR;
 
-	if (depth == -1) speed = 0.50;
-	else speed = 0.40;
+		if (currentSpeed > MAX_SPEED)
+			currentSpeed = MAX_SPEED;
+	}
+	else
+	{
+		// TODO: lineare decrease hier?
+		currentSpeed = MIN_SPEED;
+	}
 
-	engine.setSpeed(-speed, -speed);
+	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
 
 int rover::getDepth(int startHeight) {
@@ -165,8 +174,8 @@ void rover::checkTrackSignals()
 	// |   |||   | == start fast track
 	// |  || ||   | == stop fast track
 
-	float32_t *percent_camdata = (float32_t *)calloc(sizeof(float32_t), res_x);
-	float32_t *out_fft = (float32_t *)calloc(sizeof(float32_t), res_x * 2);
+	// float32_t *percent_camdata = (float32_t *)calloc(sizeof(float32_t), res_x);
+	// float32_t *out_fft = (float32_t *)calloc(sizeof(float32_t), res_x * 2);
 	// arm_rfft_fast_instance_f32 fft_instance;
 
 	// arm_status status = arm_rfft_fast_init_f32(&fft_instance, res_x);
@@ -185,11 +194,8 @@ void rover::checkTrackSignals()
 	// }
 	// printf("\n");
 
-	free(percent_camdata);
-	free(out_fft);
-
-
-	// if(secEdge - firstEdge < 50) stopTrackSignal = 1;
+	// free(percent_camdata);
+	// free(out_fft);
 
 	return;
 }

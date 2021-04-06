@@ -53,6 +53,11 @@ extern "C"
 #define STEERING_RANGE 0.733038
 #define THRESHOLD 10
 
+#define MAX_SPEED 0.5
+#define MIN_SPEED 0.45
+#define SPEED_INCREASE_FACTOR 1.05
+#define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
+
 //#define CAM_ANGLE (atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST) + (FOV_Y / 4.0))
 #define CAM_ANGLE (70 * M_PI / 180.0)
 
@@ -71,13 +76,13 @@ private:
     bool stopTrackSignal = false;
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     int res_x, res_y, line1, line2;
-    float mid1, mid2;
+    float midLower, midUpper, currentSpeed;
     uint8_t *camData1, *camData2;
 
     void engine_kpod();
 
     int findEdge(uint8_t camData[], int start, int stop);
-    float getMid(uint8_t camData[], float mid);
+    void getMid(uint8_t camData[], float &mid);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -102,10 +107,11 @@ public:
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
 
-        mid1 = res_x / 2;
-        mid2 = res_x / 2;
+        midLower = midUpper = res_x / 2;
 
         line1 = res_y * 3/4;
+
+        currentSpeed = MIN_SPEED;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -122,33 +128,35 @@ public:
     void test_rgb();
 
     void step() {
+        float usedMid = 0.0f;
+
         if (stopTrackSignal)
         {
             stop();
             return;
         }
 
-        float mid;
-
         getCamData(line1, camData1);
 
-        mid1 = getMid(camData1, mid1);
+        getMid(camData1, midLower);
 
-        printf("mid1: %d\n", (int)mid1);
+        printf("mid lower: %d\n", (int)midLower);
 
         int depth = getDepth(line1);
         point p = convert_point(res_x / 2, depth);
         float dist = p.y;
 
-        mid = mid1;
+        usedMid = midLower;
 
         if (dist > 80) {
             getCamData(depth + 5, camData2);
-            mid2 = getMid(camData2, mid2);
-            if (abs(mid2 - res_x / 2) < abs(mid1 - res_x / 2)) mid = mid2;
+            getMid(camData2, midUpper);
+
+            if (abs(midUpper - res_x / 2) < abs(midLower - res_x / 2))
+                usedMid = midUpper;
         }
         
-		setWheels(mid);
+		setWheels(usedMid);
         setSpeed(depth);
         checkTrackSignals();
         // printCamData();
