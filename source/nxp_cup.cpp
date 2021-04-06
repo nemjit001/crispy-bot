@@ -401,8 +401,6 @@ int main(void)
 		default:
 			break;
 		}
-
-		// car.test_rgb();
 	}
 
 	return 0;
