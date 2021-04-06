@@ -45,6 +45,23 @@
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
+point convert_point(int x, int y) {
+    double angleX = FOV_X * (x / (double)RES_X) - (FOV_X / 2.0);
+    double angleY = CAM_ANGLE + (FOV_Y * ((RES_Y - y) / (double)RES_Y)) - (FOV_Y / 2.0);
+    
+    double pointY = CAM_HEIGHT * tan(angleY);
+    
+    double beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + pointY * pointY);
+    
+    double pointX = beamLength * tan(angleX);
+
+    point p;
+    p.x = pointX;
+    p.y = pointY;
+
+    return p;
+}
+
 void leds_off()
 {
 	mLeds_Write(kMaskLed1, kLedOff);
@@ -59,7 +76,7 @@ static float quadraticCurve(float offset, float a, float b) {
     return sign * a * pow(abs(offset), b);
 }
 
-void rover::setCamData(int y, uint8_t *camData)
+void rover::setCamData(int y, uint8_t camData[])
 {
 	uint8_t r, g, b;
 
@@ -72,13 +89,13 @@ void rover::setCamData(int y, uint8_t *camData)
 void rover::setMid() {
 	firstEdge = findEdge(camData1, mid1, -1);
 	secEdge = findEdge(camData1, mid1, res_x);
-	thirdEdge = findEdge(camData2, mid2, res_x);
+	thirdEdge = findEdge(camData2, mid2, -1);
 	fourEdge = findEdge(camData2, mid2, res_x);
 
 	if (firstEdge == -1) firstEdge = 0;
 	if (secEdge == -1) secEdge = res_x - 1;
-	if (thirdEdge == -1) firstEdge = 0;
-	if (fourEdge == -1) secEdge = res_x - 1;
+	if (thirdEdge == -1) thirdEdge = 0;
+	if (fourEdge == -1) fourEdge = res_x - 1;
 
     mid1 = (firstEdge + secEdge) / 2.0;
 	mid2 = (thirdEdge + fourEdge) / 2.0;
@@ -86,9 +103,6 @@ void rover::setMid() {
 
 void rover::setWheels() {
 	float offset, deg;
-
-	//if (mid2 > mid1 + 5) mid1 =- 5;
-	//else if (mid2 < mid1 - 5) mid1 =+ 5; 
 
     offset = (mid1 - res_x / 2.0) / (res_x / 2.0);
     offset *= (lineWidth / 2.0);
@@ -132,11 +146,10 @@ void rover::setSpeed() {
 
 	if (edge == -1) speed = 0.50;
 	else {
-		float temp = edge / float(line1);
-		speed = 0.42 + 0.05 * temp;
+		point p = convert_point(res_x / 2, edge);
+		if (p.y < 100) speed = 0.40;
+		// printf("dist: %d\n", (int)p.y);
 	}
-
-	speed = 0.42;
 
 	engine.setSpeed(-speed, -speed);
 }
@@ -170,6 +183,9 @@ void rover::checkTrackSignals()
 
 	free(percent_camdata);
 	free(out_fft);
+
+
+	if(secEdge - firstEdge < 50) stopTrackSignal = 1;
 
 	return;
 }
