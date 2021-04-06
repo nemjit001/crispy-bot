@@ -99,16 +99,16 @@ float rover::getMid(uint8_t camData[], float mid) {
     return (firstEdge + secEdge) / 2.0;
 }
 
-void rover::setWheels(float mid) {
-	float offset, deg;
+void rover::setWheels(point p) {
+	float deg, offset;
 
-    offset = (mid - res_x / 2.0) / (res_x / 2.0);
-    offset *= (lineWidth / 2.0);
-
-    deg = atan2(offset, LINE_DIST);
+    deg = atan2(p.x, p.y);
 
     // offset = quadraticCurve(deg / STEERING_RANGE, 4 - ((speed - 0.42) * 30), 2);
+	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+
 	offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+
     if (offset > 1) offset = 1;
     else if (offset < -1) offset = -1;
 
@@ -137,6 +137,8 @@ void rover::setSpeed(int depth) {
 
 	if (depth == -1) speed = 0.50;
 	else speed = 0.40;
+
+	speed = 0.45;
 
 	engine.setSpeed(-speed, -speed);
 }
@@ -248,20 +250,24 @@ void rover::test_servo()
 	servo->setRotation(duty);
 }
 
-// void rover::printCamData() {
-// 	char buf[32];
+void rover::printCamData() {
+	getCamData(res_y / 2, camData1);
 
-// 	sprintf(buf, "%d,", res_x);
-//     print_string(buf);
+	char buf[32];
 
-//     for (int i = 0; i < res_x; i++) {
-// 		sprintf(buf, "%d,", camData1[i]);
-//         print_string(buf);
-//     }
+	sprintf(buf, "%d,", res_x);
+    print_string(buf);
 
-//     sprintf(buf, "%d,%d,%d,\r\n", int(mid1), firstEdge, secEdge);
-// 	print_string(buf);
-// }
+    for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData1[i]);
+        print_string(buf);
+    }
+
+	print_string("\r\n");
+
+    // sprintf(buf, "%d,%d,%d,\r\n", int(mid1), firstEdge, secEdge);
+	// print_string(buf);
+}
 
 uint8_t get_switch_state()
 {
@@ -381,6 +387,9 @@ int main(void)
 			car.stop();
 			__asm("nop");
 			break;
+		case _LINE_DIST:
+			car.stop();
+			car.printCamData();
 		default:
 			break;
 		}

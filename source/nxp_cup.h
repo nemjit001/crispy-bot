@@ -44,7 +44,7 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 30.0      // In cm, wiel tot lijn
+#define LINE_DIST 41.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
 #define FOV_X (60 * M_PI / 180.0)
@@ -53,8 +53,7 @@ extern "C"
 #define STEERING_RANGE 0.733038
 #define THRESHOLD 10
 
-//#define CAM_ANGLE (atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST) + (FOV_Y / 4.0))
-#define CAM_ANGLE (70 * M_PI / 180.0)
+#define CAM_ANGLE atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST)
 
 typedef struct {
     double x;
@@ -69,7 +68,6 @@ private:
     engineModule engine;
 
     bool stopTrackSignal = false;
-    float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     int res_x, res_y, line1, line2;
     float mid1, mid2;
     uint8_t *camData1, *camData2;
@@ -82,9 +80,7 @@ private:
     void getCamData(int y, uint8_t camData[]);
 
     void setSpeed(int depth);
-    void setWheels(float mid);
-
-    void printCamData();
+    void setWheels(point p);
     
     void checkTrackSignals();
 
@@ -120,38 +116,38 @@ public:
 
     void test_servo();
     void test_rgb();
+    void printCamData();
 
     void step() {
+        point p;
+
         if (stopTrackSignal)
         {
             stop();
             return;
         }
 
-        float mid;
-
         getCamData(line1, camData1);
 
         mid1 = getMid(camData1, mid1);
 
-        printf("mid1: %d\n", (int)mid1);
-
         int depth = getDepth(line1);
-        point p = convert_point(res_x / 2, depth);
+        p = convert_point(res_x / 2, depth);
         float dist = p.y;
 
-        mid = mid1;
+        p = convert_point(mid1, line1);
+
+        p.y = p.y - 15;
 
         if (dist > 80) {
             getCamData(depth + 5, camData2);
             mid2 = getMid(camData2, mid2);
-            if (abs(mid2 - res_x / 2) < abs(mid1 - res_x / 2)) mid = mid2;
+            if (abs(mid2 - res_x / 2) < abs(mid1 - res_x / 2)) p = convert_point(mid2, depth + 5);
         }
         
-		setWheels(mid);
+		setWheels(p);
         setSpeed(depth);
         checkTrackSignals();
-        // printCamData();
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
