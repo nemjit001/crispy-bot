@@ -86,10 +86,6 @@ void rover::setCamData(int y, uint8_t camData[])
 	}
 }
 
-void rover::checkFinish(){
-	if(secEdge - firstEdge < 50) finished = 1;
-}
-
 void rover::setMid() {
 	firstEdge = findEdge(camData1, mid1, -1);
 	secEdge = findEdge(camData1, mid1, res_x);
@@ -107,9 +103,8 @@ void rover::setMid() {
 
 void rover::setWheels() {
 	float offset, deg;
-	int offset2;
 
-    offset = ((mid1 + offset2) - res_x / 2.0) / (res_x / 2.0);
+    offset = (mid1 - res_x / 2.0) / (res_x / 2.0);
     offset *= (lineWidth / 2.0);
 
     deg = atan2(offset, LINE_DIST);
@@ -159,6 +154,42 @@ void rover::setSpeed() {
 //	speed = 0;
 
 	engine.setSpeed(-speed, -speed);
+}
+
+void rover::checkTrackSignals()
+{
+	// TODO: check track for codes
+	// |  -   -  | == stop
+	// |   |||   | == start fast track
+	// |  || ||   | == stop fast track
+
+	float32_t *percent_camdata = (float32_t *)calloc(sizeof(float32_t), res_x);
+	float32_t *out_fft = (float32_t *)calloc(sizeof(float32_t), res_x * 2);
+	// arm_rfft_fast_instance_f32 fft_instance;
+
+	// arm_status status = arm_rfft_fast_init_f32(&fft_instance, res_x);
+
+	// if (status == ARM_MATH_ARGUMENT_ERROR)
+	// 	return;
+
+	// for (int i = 0; i < res_x; i++)
+	// 	percent_camdata[i] = (float32_t)(camData1[i]) / 255.0f;
+
+	// arm_rfft_fast_f32(&fft_instance, percent_camdata, out_fft, 0);
+
+	// for (int i = 0; i < res_x * 2; i++)
+	// {
+	// 	printf("%d,", (int)out_fft[i]);
+	// }
+	// printf("\n");
+
+	free(percent_camdata);
+	free(out_fft);
+
+
+	if(secEdge - firstEdge < 50) stopTrackSignal = 1;
+
+	return;
 }
 
 // void rover::set_servo(double angle){
@@ -373,8 +404,6 @@ int main(void)
 		default:
 			break;
 		}
-
-		// car.test_rgb();
 	}
 
 	return 0;

@@ -31,6 +31,8 @@ extern "C"
 #include "Applications/gInput.h"
 #include "Applications/gCompute.h"
 #include "Applications/gOutput.h"
+
+#include "arm_math.h"
 }
 
 /* Pixy 2 */
@@ -65,6 +67,7 @@ private:
     servoModule *servo;
     engineModule engine;
 
+    bool stopTrackSignal;
 	double prev_angle;
 	int prev_x0, prev_y0;
 	point prev_p0, prev_p1;
@@ -75,7 +78,6 @@ private:
     int firstEdge, secEdge, thirdEdge, fourEdge;
     uint8_t *camData1, *camData2;
     float speed;
-    int finished;
 
     void set_steering_angle();
     void engine_kpod();
@@ -90,8 +92,8 @@ private:
     void setThreshold();
     void setCamData(int y, uint8_t camData[]);
     void printCamData();
-    void checkFinish();
     point convert_point(int x, int y);
+    void checkTrackSignals();
 
 public:
     rover() {
@@ -108,6 +110,7 @@ public:
         line2 = res_y * 1/4;
         mid1 = res_x / 2.0;
         mid2 = res_x / 2.0;
+        stopTrackSignal = false;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -126,17 +129,19 @@ public:
     void test_rgb();
 
     void step() {
-        if(finished == 0){
-            setCamData(line1, camData1);
-            setCamData(line2, camData2);
-            setMid();
-            setWheels();
-            setSpeed();
-            // printCamData();
+        if (stopTrackSignal)
+        {
+            this->stop();
+            return;
         }
-        else {
-            engine.setSpeed(0.0, 0.0);
-        }
+
+        setCamData(line1, camData1);
+        setCamData(line2, camData2);
+        setMid();
+		setWheels();
+        setSpeed();
+        checkTrackSignals();
+        // printCamData();
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
