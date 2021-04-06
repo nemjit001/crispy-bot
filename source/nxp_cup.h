@@ -44,11 +44,14 @@ extern "C"
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
 #define LINE_DIST 30.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
-#define CAM_ANGLE atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST)
+
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
 #define STEERING_RANGE 0.733038
+
+//#define CAM_ANGLE (atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST) + (FOV_Y / 4.0))
+#define CAM_ANGLE (70 * M_PI / 180.0)
 
 typedef struct {
     double x;
@@ -88,6 +91,7 @@ private:
     void setCamData(int y, uint8_t camData[]);
     void printCamData();
     void checkFinish();
+    point convert_point(int x, int y);
 
 public:
     rover() {

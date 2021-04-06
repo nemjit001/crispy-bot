@@ -45,10 +45,10 @@
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
-point convert_point(int x, int y) {
-    double angleX = FOV_X * (x / (double)RES_X) - (FOV_X / 2.0);
-    double angleY = CAM_ANGLE + (FOV_Y * ((RES_Y - y) / (double)RES_Y)) - (FOV_Y / 2.0);
-    
+point rover::convert_point(int x, int y) {
+    double angleX = FOV_X * (x / (double)res_x) - (FOV_X / 2.0);
+    double angleY = CAM_ANGLE - ((FOV_Y * ((res_y - y) / (double)res_y)) - (FOV_Y / 2.0));
+
     double pointY = CAM_HEIGHT * tan(angleY);
     
     double beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + pointY * pointY);
@@ -151,10 +151,12 @@ void rover::setSpeed() {
 
 	if (edge == -1) speed = 0.50;
 	else {
+		printf("edge: %d\n", edge);
 		point p = convert_point(res_x / 2, edge);
 		if (p.y < 100) speed = 0.40;
-		// printf("dist: %d\n", (int)p.y);
 	}
+
+//	speed = 0;
 
 	engine.setSpeed(-speed, -speed);
 }
@@ -320,6 +322,7 @@ void board_device_setup()
  */
 int main(void)
 {
+
 	board_device_setup();
 	// print_string("INITIALIZING BOARD\n\r\0");
 
