@@ -44,8 +44,16 @@ extern "C"
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
 #define LINE_DIST 30.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
+#define CAM_ANGLE atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST)
+#define FOV_X (60 * M_PI / 180.0)
+#define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
 #define STEERING_RANGE 0.733038
+
+typedef struct {
+    double x;
+    double y;
+} point;
 
 class rover
 {
@@ -64,6 +72,7 @@ private:
     int firstEdge, secEdge, thirdEdge, fourEdge;
     uint8_t *camData1, *camData2;
     float speed;
+    int finished;
 
     void set_steering_angle();
     void engine_kpod();
@@ -78,6 +87,7 @@ private:
     void setThreshold();
     void setCamData(int y, uint8_t camData[]);
     void printCamData();
+    void checkFinish();
 
 public:
     rover() {
@@ -94,8 +104,6 @@ public:
         line2 = res_y * 1/4;
         mid1 = res_x / 2.0;
         mid2 = res_x / 2.0;
-
-        printf("line1: %d\n", line1);
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -114,12 +122,17 @@ public:
     void test_rgb();
 
     void step() {
-        setCamData(line1, camData1);
-        setCamData(line2, camData2);
-        setMid();
-		setWheels();
-        setSpeed();
-        printCamData();
+        if(finished == 0){
+            setCamData(line1, camData1);
+            setCamData(line2, camData2);
+            setMid();
+            setWheels();
+            setSpeed();
+            // printCamData();
+        }
+        else {
+            engine.setSpeed(0.0, 0.0);
+        }
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
