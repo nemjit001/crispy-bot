@@ -40,6 +40,7 @@
 #define _CHECK_BATTERY 	0b00000001
 #define _CHECK_SERVO 	0b00000010
 #define _PAUSE_ALL		0b00001000
+#define _LINE_DIST		0b00000011
 
 #define DEBUG_PRINT_ENABLED 1
 
@@ -76,7 +77,7 @@ static float quadraticCurve(float offset, float a, float b) {
     return sign * a * pow(abs(offset), b);
 }
 
-void rover::setCamData(int y, uint8_t camData[])
+void rover::getCamData(int y, uint8_t camData[])
 {
 	uint8_t r, g, b;
 
@@ -86,30 +87,28 @@ void rover::setCamData(int y, uint8_t camData[])
 	}
 }
 
-void rover::setMid() {
-	firstEdge = findEdge(camData1, mid1, -1);
-	secEdge = findEdge(camData1, mid1, res_x);
-	thirdEdge = findEdge(camData2, mid2, -1);
-	fourEdge = findEdge(camData2, mid2, res_x);
+float rover::getMid(uint8_t camData[], float mid) {
+	int firstEdge, secEdge;
+
+	firstEdge = findEdge(camData, mid, -1);
+	secEdge = findEdge(camData1, mid, res_x);
 
 	if (firstEdge == -1) firstEdge = 0;
 	if (secEdge == -1) secEdge = res_x - 1;
-	if (thirdEdge == -1) thirdEdge = 0;
-	if (fourEdge == -1) fourEdge = res_x - 1;
 
-    mid1 = (firstEdge + secEdge) / 2.0;
-	mid2 = (thirdEdge + fourEdge) / 2.0;
+    return (firstEdge + secEdge) / 2.0;
 }
 
-void rover::setWheels() {
+void rover::setWheels(float mid) {
 	float offset, deg;
 
-    offset = (mid1 - res_x / 2.0) / (res_x / 2.0);
+    offset = (mid - res_x / 2.0) / (res_x / 2.0);
     offset *= (lineWidth / 2.0);
 
     deg = atan2(offset, LINE_DIST);
 
-    offset = quadraticCurve(deg / STEERING_RANGE, 4 - ((speed - 0.42) * 30), 2);
+    // offset = quadraticCurve(deg / STEERING_RANGE, 4 - ((speed - 0.42) * 30), 2);
+	offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
     if (offset > 1) offset = 1;
     else if (offset < -1) offset = -1;
 
@@ -124,7 +123,7 @@ int rover::findEdge(uint8_t data[], int start, int stop) {
 
     while (i != stop) {
         diff = sign * (data[i] - data[i + 1]);
-        if (diff >= threshold) {
+        if (diff >= THRESHOLD) {
             return i;
         }
         i += sign;
@@ -133,27 +132,30 @@ int rover::findEdge(uint8_t data[], int start, int stop) {
     return -1;
 }
 
-void rover::setSpeed() {
-	uint8_t data[line1];
+void rover::setSpeed(int depth) {
+	float speed;
+
+	if (depth == -1) speed = 0.50;
+	else speed = 0.40;
+
+	engine.setSpeed(-speed, -speed);
+}
+
+int rover::getDepth(int startHeight) {
+	uint8_t data[startHeight];
 	uint8_t r, g, b;
 
-	for (int i = 0; i < line1; i++) {
-		pixy.video.getRGB(res_x / 2, line1 - i - 1, &r, &g, &b, 0);
+	for (int i = 0; i < startHeight; i++) {
+		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &r, &g, &b, 0);
 		data[i] = (r + g + b) / 3;
 	}
 
-	int edge = findEdge(data, 0, line1 - 1);
+	return findEdge(data, 0, startHeight - 1);
 
-	if (edge == -1) speed = 0.50;
-	else {
-		printf("edge: %d\n", edge);
-		point p = convert_point(res_x / 2, edge);
-		if (p.y < 100) speed = 0.40;
-	}
+	// if (edge == -1) return -1;
 
-//	speed = 0;
-
-	engine.setSpeed(-speed, -speed);
+	// point p = convert_point(res_x / 2, edge);
+	// return p.y;
 }
 
 void rover::checkTrackSignals()
@@ -187,37 +189,15 @@ void rover::checkTrackSignals()
 	free(out_fft);
 
 
-	if(secEdge - firstEdge < 50) stopTrackSignal = 1;
+	// if(secEdge - firstEdge < 50) stopTrackSignal = 1;
 
 	return;
 }
-
-// void rover::set_servo(double angle){
-// 	servo->setRotation(angle * STEP_PER_DEGREE);
-// }
-
 
 void rover::engine_kpod()
 { 
 	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
 	printf("kPot1: %d\n", (int)(mAd_Read(kPot1) * 1000));
-}
-
-bool rover::clear_to_steer(int angle){
-	if (angle < 0){
-		for(int i = 1; i < pixy.line.numVectors; i++){
-			if(feature_left_right(pixy.line.vectors[i].m_x0) == 0 && pixy.line.vectors[i].m_y1 < (pixy.frameHeight * 0.75)) return false;
-			else return true;
-		}
-	}
-	else if (angle > 0) {
-		for(int i = 1; i < pixy.line.numVectors; i++){
-			if(feature_left_right(pixy.line.vectors[i].m_x0) == 1 && pixy.line.vectors[i].m_y1 < (pixy.frameHeight * 0.75)) return false;
-			else return true;
-		}
-	}
-	
-	return false;
 }
 
 void display_battery_level()
@@ -268,20 +248,20 @@ void rover::test_servo()
 	servo->setRotation(duty);
 }
 
-void rover::printCamData() {
-	char buf[32];
+// void rover::printCamData() {
+// 	char buf[32];
 
-	sprintf(buf, "%d,", res_x);
-    print_string(buf);
+// 	sprintf(buf, "%d,", res_x);
+//     print_string(buf);
 
-    for (int i = 0; i < res_x; i++) {
-		sprintf(buf, "%d,", camData1[i]);
-        print_string(buf);
-    }
+//     for (int i = 0; i < res_x; i++) {
+// 		sprintf(buf, "%d,", camData1[i]);
+//         print_string(buf);
+//     }
 
-    sprintf(buf, "%d,%d,%d,\r\n", int(mid1), firstEdge, secEdge);
-	print_string(buf);
-}
+//     sprintf(buf, "%d,%d,%d,\r\n", int(mid1), firstEdge, secEdge);
+// 	print_string(buf);
+// }
 
 uint8_t get_switch_state()
 {

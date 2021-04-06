@@ -51,6 +51,7 @@ extern "C"
 #define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
 #define STEERING_RANGE 0.733038
+#define THRESHOLD 10
 
 //#define CAM_ANGLE (atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST) + (FOV_Y / 4.0))
 #define CAM_ANGLE (70 * M_PI / 180.0)
@@ -67,33 +68,27 @@ private:
     servoModule *servo;
     engineModule engine;
 
-    bool stopTrackSignal;
-	double prev_angle;
-	int prev_x0, prev_y0;
-	point prev_p0, prev_p1;
-    float mid1, mid2;
+    bool stopTrackSignal = false;
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
-    float threshold;
     int res_x, res_y, line1, line2;
-    int firstEdge, secEdge, thirdEdge, fourEdge;
+    float mid1, mid2;
     uint8_t *camData1, *camData2;
-    float speed;
 
-    void set_steering_angle();
     void engine_kpod();
-    void set_servo(double angle);
-    int feature_left_right(int vector_start);
-    bool clear_to_steer(int left_right);
 
     int findEdge(uint8_t camData[], int start, int stop);
-    void setMid();
-    void setWheels();
-    void setSpeed();
-    void setThreshold();
-    void setCamData(int y, uint8_t camData[]);
+    float getMid(uint8_t camData[], float mid);
+    int getDepth(int startHeight);
+    void getCamData(int y, uint8_t camData[]);
+
+    void setSpeed(int depth);
+    void setWheels(float mid);
+
     void printCamData();
-    point convert_point(int x, int y);
+    
     void checkTrackSignals();
+
+    point convert_point(int x, int y);
 
 public:
     rover() {
@@ -106,16 +101,14 @@ public:
 
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
+
+        mid1 = res_x / 2;
+        mid2 = res_x / 2;
+
         line1 = res_y * 3/4;
-        line2 = res_y * 1/4;
-        mid1 = res_x / 2.0;
-        mid2 = res_x / 2.0;
-        stopTrackSignal = false;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
-
-        threshold = 10;
     }
 
     ~rover()
@@ -131,15 +124,32 @@ public:
     void step() {
         if (stopTrackSignal)
         {
-            this->stop();
+            stop();
             return;
         }
 
-        setCamData(line1, camData1);
-        setCamData(line2, camData2);
-        setMid();
-		setWheels();
-        setSpeed();
+        float mid;
+
+        getCamData(line1, camData1);
+
+        mid1 = getMid(camData1, mid1);
+
+        printf("mid1: %d\n", (int)mid1);
+
+        int depth = getDepth(line1);
+        point p = convert_point(res_x / 2, depth);
+        float dist = p.y;
+
+        mid = mid1;
+
+        if (dist > 80) {
+            getCamData(depth + 5, camData2);
+            mid2 = getMid(camData2, mid2);
+            if (abs(mid2 - res_x / 2) < abs(mid1 - res_x / 2)) mid = mid2;
+        }
+        
+		setWheels(mid);
+        setSpeed(depth);
         checkTrackSignals();
         // printCamData();
 	};
