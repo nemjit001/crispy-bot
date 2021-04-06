@@ -77,7 +77,7 @@ private:
     float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
     int res_x, res_y, line1, line2;
     float midLower, midUpper, currentSpeed;
-    uint8_t *camData1, *camData2;
+    uint8_t *camData1, *camData2, *frame;
 
     void engine_kpod();
 
@@ -112,7 +112,8 @@ public:
         line1 = res_y * 3/4;
 
         currentSpeed = MIN_SPEED;
-
+    
+        frame = (uint8_t*)malloc(res_x * res_y * sizeof(uint8_t));
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
     }

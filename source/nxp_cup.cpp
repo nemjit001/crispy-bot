@@ -79,20 +79,19 @@ static float quadraticCurve(float offset, float a, float b) {
 
 void rover::getCamData(int y, uint8_t camData[])
 {
-	uint8_t rgb[3];
+	pixy.video.getRGB(frame, 0);
 
-	for (int i = 0; i < res_x; i++) {
-		pixy.video.getRGB(i, y, &rgb[0], &rgb[1], &rgb[2], 0);
-
-		camData[i] = (rgb[0] + rgb[1] + rgb[2]) / 3;
+	for(int i = 0; i < res_x; i++){
+		
 	}
+
 }
 
 void rover::getMid(uint8_t camData[], float &mid) {
 	int firstEdge, secEdge;
 
 	firstEdge = findEdge(camData, mid, -1);
-	secEdge = findEdge(camData1, mid, res_x);
+	secEdge = findEdge(camData, mid, res_x);
 
 	if (firstEdge == -1) firstEdge = 0;
 	if (secEdge == -1) secEdge = res_x - 1;
