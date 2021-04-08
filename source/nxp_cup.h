@@ -44,16 +44,22 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 41.0      // In cm, wiel tot lijn
+#define LINE_DIST 80.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
 #define STEERING_RANGE 0.733038
-#define THRESHOLD 10
+#define THRESHOLD 5
 
-#define CAM_ANGLE atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST)
+// #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
+#define CAM_ANGLE (64 * M_PI / 180.0)
+
+#define MAX_SPEED 0.5
+#define MIN_SPEED 0.45
+#define SPEED_INCREASE_FACTOR 1.05
+#define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
 typedef struct {
     double x;
@@ -69,13 +75,13 @@ private:
 
     bool stopTrackSignal = false;
     int res_x, res_y, line1, line2;
-    float mid1, mid2;
+    float midLower, midUpper;
     uint8_t *camData1, *camData2;
 
     void engine_kpod();
 
     int findEdge(uint8_t camData[], int start, int stop);
-    float getMid(uint8_t camData[], float mid);
+    point getMid(float &mid, int y);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -98,10 +104,9 @@ public:
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
 
-        mid1 = res_x / 2;
-        mid2 = res_x / 2;
+        midLower = midUpper = res_x / 2;
 
-        line1 = res_y * 3/4;
+        line1 = res_y - 25;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -116,10 +121,11 @@ public:
 
     void test_servo();
     void test_rgb();
+    void printLineDist();
     void printCamData();
 
     void step() {
-        point p;
+        point p, p1, p2;
 
         if (stopTrackSignal)
         {
@@ -127,26 +133,28 @@ public:
             return;
         }
 
-        getCamData(line1, camData1);
+        // getCamData(line1, camData1);
 
-        mid1 = getMid(camData1, mid1);
+        p = getMid(midLower, line1);
 
         int depth = getDepth(line1);
-        p = convert_point(res_x / 2, depth);
+        p1 = convert_point(res_x / 2, depth);
         float dist = p.y;
 
-        p = convert_point(mid1, line1);
+        // p.y = p.y - 15;
 
-        p.y = p.y - 15;
-
-        if (dist > 80) {
-            getCamData(depth + 5, camData2);
-            mid2 = getMid(camData2, mid2);
-            if (abs(mid2 - res_x / 2) < abs(mid1 - res_x / 2)) p = convert_point(mid2, depth + 5);
-        }
+        // if (dist > 100) {
+        //     getCamData(depth + 10, camData2);
+        //     midUpper = getMid(camData2, midUpper);
+        //     if (abs(midUpper - res_x / 2) < abs(midLower - res_x / 2)) {
+        //         point q = convert_point(midUpper, depth + 10);
+        //         p.x = (p.x + q.x) / 2.0;
+        //         p.y = (p.y + q.y) / 2.0;
+        //     }
+        // }
         
 		setWheels(p);
-        setSpeed(depth);
+        setSpeed((int)dist);
         checkTrackSignals();
 	};
 
