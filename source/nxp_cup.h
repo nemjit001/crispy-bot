@@ -44,7 +44,7 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 80.0      // In cm, wiel tot lijn
+#define LINE_DIST 69.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
 #define FOV_X (60 * M_PI / 180.0)
@@ -53,8 +53,8 @@ extern "C"
 #define STEERING_RANGE 0.733038
 #define THRESHOLD 5
 
-// #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
-#define CAM_ANGLE (64 * M_PI / 180.0)
+#define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
+// #define CAM_ANGLE (64 * M_PI / 180.0)
 
 #define MAX_SPEED 0.5
 #define MIN_SPEED 0.45
@@ -74,14 +74,17 @@ private:
     engineModule engine;
 
     bool stopTrackSignal = false;
-    int res_x, res_y, line1, line2;
-    float midLower, midUpper;
+    int res_x, res_y, line1, line2, depth;
+    point midLower, midUpper;
     uint8_t *camData1, *camData2;
 
     void engine_kpod();
 
+    int findEdgeHor(int y, int start, int stop);
+    int findEdgeVer(int x, int start, int stop);
     int findEdge(uint8_t camData[], int start, int stop);
-    point getMid(float &mid, int y);
+    point getMid(point prev, int y);
+    point getMid(point prev, int y, int &firstEdge, int &secEdge);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -91,6 +94,7 @@ private:
     void checkTrackSignals();
 
     point convert_point(int x, int y);
+    point reverse_point(float x, float y);
 
 public:
     rover() {
@@ -104,9 +108,11 @@ public:
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
 
-        midLower = midUpper = res_x / 2;
+        midLower = midUpper = {0, 100};
 
         line1 = res_y - 25;
+
+        depth = line1;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -122,10 +128,11 @@ public:
     void test_servo();
     void test_rgb();
     void printLineDist();
+    void printLineDist2();
     void printCamData();
 
     void step() {
-        point p, p1, p2;
+        point mid, p1;
 
         if (stopTrackSignal)
         {
@@ -135,25 +142,19 @@ public:
 
         // getCamData(line1, camData1);
 
-        p = getMid(midLower, line1);
+        mid = midLower = getMid(midLower, line1);
+        // mid.y -= 15;
 
-        int depth = getDepth(line1);
+        depth = getDepth(depth + 20);
         p1 = convert_point(res_x / 2, depth);
-        float dist = p.y;
+        float dist = p1.y;
 
-        // p.y = p.y - 15;
-
-        // if (dist > 100) {
-        //     getCamData(depth + 10, camData2);
-        //     midUpper = getMid(camData2, midUpper);
-        //     if (abs(midUpper - res_x / 2) < abs(midLower - res_x / 2)) {
-        //         point q = convert_point(midUpper, depth + 10);
-        //         p.x = (p.x + q.x) / 2.0;
-        //         p.y = (p.y + q.y) / 2.0;
-        //     }
-        // }
+        if (dist > 100) {
+            getCamData(depth + 10, camData2);
+            mid = midUpper = getMid(midUpper, depth + 10);
+        }
         
-		setWheels(p);
+		setWheels(mid);
         setSpeed((int)dist);
         checkTrackSignals();
 	};

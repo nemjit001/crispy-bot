@@ -64,6 +64,24 @@ point rover::convert_point(int x, int y) {
     return p;
 }
 
+point rover::reverse_point(float x, float y) {
+	float angleY = atan2(y, CAM_HEIGHT);
+	float beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + y * y);
+
+	int pixY = res_y - round(((angleY - CAM_ANGLE + FOV_Y / 2.0) / (float)FOV_Y) * res_y);
+	
+	float angleX = atan2(x, beamLength);
+	
+	int pixX = round(((angleX + FOV_X / 2.0) / (float)FOV_X) * res_x);
+
+	point p;
+
+	p.x = pixX;
+	p.y = pixY;
+	
+	return p;
+}
+
 void leds_off()
 {
 	mLeds_Write(kMaskLed1, kLedOff);
@@ -89,24 +107,25 @@ void rover::getCamData(int y, uint8_t camData[])
 	}
 }
 
-point rover::getMid(float &mid, int y) {
-	uint8_t camData[res_x];
+point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	point p;
+	float mid;
 
-	getCamData(y, camData);
+	mid = reverse_point(prev.x, prev.y).x;
 
-	int firstEdge, secEdge;
+	if (mid < 10) mid = 10;
+	if (mid > res_x - 10) mid = res_x - 10;
 
-	firstEdge = findEdge(camData, mid, 0);
-	secEdge = findEdge(camData, mid, res_x - 1);
+	firstEdge = findEdgeHor(y, mid, 0);
+	secEdge = findEdgeHor(y, mid, res_x - 1);
 
 	if (firstEdge == -1 && secEdge != -1) {
 		p = convert_point(secEdge, y);
-		p.x -= 35;
+		p.x -= 25;
 	}
 	else if (secEdge == -1 && firstEdge != -1) {
 		p = convert_point(firstEdge, y);
-		p.x += 35;
+		p.x += 25;
 	}
 	else if (firstEdge == -1 && secEdge == -1) {
 		p = convert_point(res_x / 2, y);
@@ -115,34 +134,7 @@ point rover::getMid(float &mid, int y) {
 		p = convert_point((firstEdge + secEdge) / 2.0, y);
 	}
 
-	if (firstEdge == -1) firstEdge = 0;
-	if (secEdge == -1) secEdge = res_x - 1;
-
-	mid = (firstEdge + secEdge) / 2.0;
-
     return p;
-}
-
-void rover::setWheels(point p) {
-	float deg, offset;
-
-    deg = atan2(p.x, p.y);
-
-    // offset = quadraticCurve(deg / STEERING_RANGE, 4 - ((speed - 0.42) * 30), 2);
-	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
-
-	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
-
-	offset = deg / STEERING_RANGE;
-
-    if (offset > 1) offset = 1;
-    else if (offset < -1) offset = -1;
-
-	offset = offset * 0.9 + 0.1;
-
-	offset = 0;
-    
-    servo->setRotation(offset);
 }
 
 int rover::findEdge(uint8_t data[], int start, int stop) {
@@ -155,6 +147,73 @@ int rover::findEdge(uint8_t data[], int start, int stop) {
             return i;
         }
         i += sign;
+    }
+
+    return -1;
+}
+
+point rover::getMid(point prev, int y) {
+	int firstEdge, secEdge;
+
+    return getMid(prev, y, firstEdge, secEdge);
+}
+
+void rover::setWheels(point p) {
+	float deg, offset;
+
+    deg = atan2(p.x, p.y);
+
+	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+
+	offset = deg / STEERING_RANGE;
+
+	offset -= 0.1;
+
+    if (offset > 1) offset = 1;
+    else if (offset < -1) offset = -1;
+    
+    servo->setRotation(offset);
+}
+
+int rover::findEdgeHor(int y, int start, int stop) {
+    int diff = 0, i = start;
+	uint8_t c1, c2;
+    int sign = (start < stop) ? 1 : -1;
+
+	pixy.video.getRGB(i, y, &c1, 0);
+
+    while (i != stop) {
+		pixy.video.getRGB(i + 1, y, &c2, 0);
+
+        diff = sign * (c1 - c2);
+        if (diff >= THRESHOLD) {
+            return i;
+        }
+        i += sign;
+
+		c1 = c2;
+    }
+
+    return -1;
+}
+
+int rover::findEdgeVer(int x, int start, int stop) {
+	int diff = 0, i = start;
+	uint8_t c1, c2;
+    int sign = (start < stop) ? 1 : -1;
+
+	pixy.video.getRGB(x, i, &c1, 0);
+
+    while (i != stop) {
+		pixy.video.getRGB(x, i + 1, &c2, 0);
+
+        diff = sign * (c1 - c2);
+        if (diff >= THRESHOLD) {
+            return i;
+        }
+        i += sign;
+
+		c1 = c2;
     }
 
     return -1;
@@ -176,17 +235,20 @@ void rover::setSpeed(int depth) {
 
 	float currentSpeed;
 
-	if (depth > 100 || depth == -1) {
-		currentSpeed = 0.5;
+	if (depth > 150 || depth == -1) {
+		currentSpeed = 0.50;
 	}
-	else currentSpeed = 0.42;
-
-	currentSpeed = 0;
+	else if (depth > 100) {
+		currentSpeed = 0.45;
+	}
+	else currentSpeed = 0.40;
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
 
 int rover::getDepth(int startHeight) {
+	int dist = findEdgeVer(res_x / 2, startHeight - 1, 0);
+
 	uint8_t data[startHeight];
 	uint8_t c;
 
@@ -195,16 +257,13 @@ int rover::getDepth(int startHeight) {
 		data[i] = c;
 	}
 
-	int dist = findEdge(data, 0, startHeight - 1);
+	int dist2 = findEdge(data, 0, startHeight - 1);
+
+	printf("%d, %d\n", res_y - dist, dist2);
 
 	if (dist == -1) return -1;
 
 	return res_y - dist;
-
-	// if (edge == -1) return -1;
-
-	// point p = convert_point(res_x / 2, edge);
-	// return p.y;
 }
 
 void rover::checkTrackSignals()
@@ -308,76 +367,63 @@ void rover::printLineDist() {
     }
 
 	print_string("\r\n");
+}
 
+void rover::printLineDist2() {
+	getCamData(res_y / 2, camData1);
 
-	// char buf[16];
-	// int depth = getDepth(line1);
+	char buf[32];
 
-	// sprintf(buf, "%d\r\n", depth);
-	// print_string(buf);
+	sprintf(buf, "%d,", res_x);
+    print_string(buf);
+
+    for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData1[i]);
+        print_string(buf);
+    }
+
+	int firstEdge, secEdge;
+	point mid = getMid(midLower, line1, firstEdge, secEdge);
+	int x = (int)reverse_point(mid.x, mid.y).x;
+
+	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
+	print_string(buf);
 }
 
 void rover::printCamData() {
 	// Print mid, firstEdge en secEdge van beide lijnen, en het verste punt (dist)
 	// mid1, firstEdge1, secEdge1, dist1, mid2, firstEdge2, secEdg2, dist2, maxdistX, maxdistY
-
-	point p, p1, p2;
-	int mid1, mid2;
+	int firstEdge, secEdge;
+	point mid, p1, p2;
 	char buf[128];
 
 	// Lower line
-	getCamData(line1, camData1);
-
-	int firstEdge, secEdge;
-
-	firstEdge = findEdge(camData1, midLower, -1);
-	secEdge = findEdge(camData1, midLower, res_x);
-
-	if (firstEdge == -1) firstEdge = 0;
-	if (secEdge == -1) secEdge = res_x - 1;
-
-	mid1 = (firstEdge + secEdge) / 2;
-	
-	p = convert_point(mid1, line1);
+	mid = getMid(midLower, line1, firstEdge, secEdge);
 	p1 = convert_point(firstEdge, line1);
 	p2 = convert_point(secEdge, line1);
 
-	sprintf(buf, "%d,%d,%d,%d,", (int)p.x, (int)p1.x, (int)p2.x, (int)p.y);
+	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
-
 
 	// Dist
 	int depth = getDepth(line1);
-
-	printf("depth: %d\n", depth);
 
 	if (depth == -1) {
 		print_string("-1,-1,-1,-1,-1,-1,\r\n");
 		return;
 	}
 
-		
 	// Upper line
-	getCamData(depth + 5, camData2);
-
-	firstEdge = findEdge(camData2, midUpper, -1);
-	secEdge = findEdge(camData2, midUpper, res_x);
-
-	if (firstEdge == -1) firstEdge = 0;
-	if (secEdge == -1) secEdge = res_x - 1;
-
-	mid2 = (firstEdge + secEdge) / 2;
-
-	p = convert_point(mid2, depth + 5);
+	mid = getMid(midUpper, depth + 5, firstEdge, secEdge);
 	p1 = convert_point(firstEdge, depth + 5);
 	p2 = convert_point(secEdge, depth + 5);
 
-	sprintf(buf, "%d,%d,%d,%d,", (int)p.x, (int)p1.x, (int)p2.x, (int)p.y);
+	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
 
-	p = convert_point(res_x / 2, depth);
+	p1 = convert_point(res_x / 2, depth);
 
-	sprintf(buf, "%d,%d,\r\n", (int)p.x, (int)p.y);
+	sprintf(buf, "%d,%d,\r\n", (int)p1.x, (int)p1.y);
 	print_string(buf);
 }
 
@@ -501,10 +547,10 @@ int main(void)
 			break;
 		case _LINE_DIST:
 			car.stop();
-			car.printLineDist();
+			car.printLineDist2();
 			break;
 		case _CAM_DATA:
-			car.step();
+			car.stop();
 			car.printCamData();
 			break;
 		default:
