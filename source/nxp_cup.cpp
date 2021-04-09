@@ -168,9 +168,13 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
+<<<<<<< HEAD
 	offset = (deg / STEERING_RANGE);// * (1 - (speed/4));
+=======
+	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
+>>>>>>> 4560e576ad68f80f2900f36d08d0199c0580013a
 
-	offset -= 0.1;
+	offset -= 0.14;
 
     if (offset > 1) offset = 1;
     else if (offset < -1) offset = -1;
@@ -237,15 +241,22 @@ void rover::setSpeed(int depth) {
 	// 	currentSpeed = MIN_SPEED;
 	// }
 
-	float currentSpeed;
-
-	if (depth > 150 || depth == -1) {
-		currentSpeed = 0.50;
+	if (depth > 100 || depth == -1) {
+		currentSpeed = 0.55;
+		pixy.setLamp(0, 0);
 	}
-	else if (depth > 100) {
-		currentSpeed = 0.45;
+	else if (depth > 70) {
+		currentSpeed = 0.47;
+		pixy.setLamp(0, 0);
 	}
-	else currentSpeed = 0.40;
+	else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+		currentSpeed = 0.30;
+		pixy.setLamp(1, 1);
+	}
+	else {
+		currentSpeed = 0.44;
+		pixy.setLamp(0, 0);
+	}
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 	speed = currentSpeed;
@@ -377,7 +388,7 @@ void rover::printLineDist() {
 }
 
 void rover::printLineDist2() {
-	getCamData(res_y / 2, camData1);
+	getCamData(line1, camData1);
 
 	char buf[32];
 
@@ -396,6 +407,28 @@ void rover::printLineDist2() {
 	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
 	print_string(buf);
 }
+
+void rover::printLineDist3() {
+	getCamData(depth + 10, camData1);
+
+	char buf[32];
+
+	sprintf(buf, "%d,", res_x);
+    print_string(buf);
+
+    for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData1[i]);
+        print_string(buf);
+    }
+
+	int firstEdge, secEdge;
+	point mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
+	int x = (int)reverse_point(mid.x, mid.y).x;
+
+	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
+	print_string(buf);
+}
+
 
 void rover::printCamData() {
 	// Print mid, firstEdge en secEdge van beide lijnen, en het verste punt (dist)
@@ -536,7 +569,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			car.step();
+			car.step(true);
 			break;
 		case _CHECK_BATTERY:
 			car.stop();
@@ -553,11 +586,11 @@ int main(void)
 			__asm("nop");
 			break;
 		case _LINE_DIST:
-			car.stop();
+			car.step(false);
 			car.printLineDist2();
 			break;
 		case _CAM_DATA:
-			car.stop();
+			car.step(false);
 			car.printCamData();
 			break;
 		default:

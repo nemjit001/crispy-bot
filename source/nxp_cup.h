@@ -50,7 +50,7 @@ extern "C"
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
-#define STEERING_RANGE 0.733038
+#define STEERING_RANGE 0.735080959
 #define THRESHOLD 5
 
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
@@ -77,7 +77,7 @@ private:
     int res_x, res_y, line1, line2, depth;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
-    float speed;
+    float currentSpeed;
 
     void engine_kpod();
 
@@ -130,9 +130,10 @@ public:
     void test_rgb();
     void printLineDist();
     void printLineDist2();
+    void printLineDist3();
     void printCamData();
 
-    void step() {
+    void step(bool motors) {
         point mid, p1;
 
         if (stopTrackSignal)
@@ -140,8 +141,6 @@ public:
             stop();
             return;
         }
-
-        // getCamData(line1, camData1);
 
         mid = midLower = getMid(midLower, line1);
         // mid.y -= 15;
@@ -151,12 +150,17 @@ public:
         float dist = p1.y;
 
         if (dist > 100) {
+            // pixy.setLamp(1, 1);
             getCamData(depth + 10, camData2);
             mid = midUpper = getMid(midUpper, depth + 10);
         }
+        else {
+            // pixy.setLamp(0, 0);
+        }
         
 		setWheels(mid);
-        setSpeed((int)dist);
+        if (motors) setSpeed((int)dist);
+        else engine.setSpeed(0, 0);
         checkTrackSignals();
 	};
 
