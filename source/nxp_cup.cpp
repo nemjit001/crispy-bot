@@ -183,14 +183,15 @@ int rover::findEdgeHor(int y, int start, int stop) {
 	pixy.video.getRGB(i, y, &c1, 0);
 
     while (i != stop) {
-		pixy.video.getRGB(i + 1, y, &c2, 0);
+		pixy.video.getRGB(i + sign, y, &c2, 0);
 
-        diff = sign * (c1 - c2);
+        diff = c1 - c2;
+
         if (diff >= THRESHOLD) {
             return i;
         }
-        i += sign;
 
+        i += sign;
 		c1 = c2;
     }
 
@@ -205,14 +206,14 @@ int rover::findEdgeVer(int x, int start, int stop) {
 	pixy.video.getRGB(x, i, &c1, 0);
 
     while (i != stop) {
-		pixy.video.getRGB(x, i + 1, &c2, 0);
+		pixy.video.getRGB(x, i + sign, &c2, 0);
 
-        diff = sign * (c1 - c2);
+        diff = c1 - c2;
         if (diff >= THRESHOLD) {
             return i;
         }
+		
         i += sign;
-
 		c1 = c2;
     }
 
@@ -248,23 +249,11 @@ void rover::setSpeed(int depth) {
 }
 
 int rover::getDepth(int startHeight) {
-	int dist = findEdgeVer(res_x / 2, startHeight - 1, 0);
-
-	uint8_t data[startHeight];
-	uint8_t c;
-
-	for (int i = 0; i < startHeight; i++) {
-		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c, 0);
-		data[i] = c;
-	}
-
-	int dist2 = findEdge(data, 0, startHeight - 1);
-
-	printf("%d, %d\n", res_y - dist, dist2);
+	int dist = findEdgeVer(res_x / 2, startHeight, 0);
 
 	if (dist == -1) return -1;
 
-	return res_y - dist;
+	return dist;
 }
 
 void rover::checkTrackSignals()

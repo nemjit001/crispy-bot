@@ -146,7 +146,7 @@ public:
         mid = midLower = getMid(midLower, line1);
         // mid.y -= 15;
 
-        depth = getDepth(depth + 20);
+        depth = getDepth(line1);
         p1 = convert_point(res_x / 2, depth);
         float dist = p1.y;
 
