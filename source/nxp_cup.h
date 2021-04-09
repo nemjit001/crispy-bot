@@ -44,7 +44,7 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 69.0      // In cm, wiel tot lijn
+#define LINE_DIST 71.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
 #define FOV_X (60 * M_PI / 180.0)
