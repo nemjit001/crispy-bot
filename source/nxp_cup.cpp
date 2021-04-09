@@ -110,14 +110,17 @@ void rover::getCamData(int y, uint8_t camData[])
 point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	point p;
 	float mid;
+	uint8_t camData[res_x];
+	
+	getCamData(y, camData);
 
 	mid = reverse_point(prev.x, prev.y).x;
 
 	if (mid < 10) mid = 10;
 	if (mid > res_x - 10) mid = res_x - 10;
 
-	firstEdge = findEdgeHor(y, mid, 0);
-	secEdge = findEdgeHor(y, mid, res_x - 1);
+	firstEdge = findEdge(camData, mid, 0);
+	secEdge = findEdge(camData, mid, res_x - 1);
 
 	if (firstEdge == -1 && secEdge != -1) {
 		p = convert_point(secEdge, y);
@@ -248,11 +251,25 @@ void rover::setSpeed(int depth) {
 }
 
 int rover::getDepth(int startHeight) {
-	int dist = findEdgeVer(res_x / 2, startHeight, 0);
+	// int dist = findEdgeVer(res_x / 2, startHeight, 0);
+
+	// if (dist == -1) return -1;
+
+	// return dist;
+
+	uint8_t data[startHeight];
+	uint8_t c;
+
+	for (int i = 0; i < startHeight; i++) {
+		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c, 0);
+		data[i] = c;
+	}
+
+	int dist = findEdge(data, 0, startHeight - 1);
 
 	if (dist == -1) return -1;
 
-	return dist;
+	return res_y - dist;
 }
 
 void rover::checkTrackSignals()
