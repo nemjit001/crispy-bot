@@ -165,7 +165,7 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-	offset = deg / STEERING_RANGE;
+	offset = (deg / STEERING_RANGE) * speed;
 
 	offset -= 0.1;
 
@@ -244,6 +244,7 @@ void rover::setSpeed(int depth) {
 	else currentSpeed = 0.40;
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
+	speed = currentSpeed;
 }
 
 int rover::getDepth(int startHeight) {

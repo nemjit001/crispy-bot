@@ -77,6 +77,7 @@ private:
     int res_x, res_y, line1, line2, depth;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
+    float speed;
 
     void engine_kpod();
 
