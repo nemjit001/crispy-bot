@@ -168,7 +168,7 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-//	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
+	// offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
 	offset = deg / STEERING_RANGE;
 
 	offset -= 0.14;
