@@ -168,12 +168,7 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-<<<<<<< HEAD
-	// offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
-	offset = deg / STEERING_RANGE;
-=======
 	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
->>>>>>> tmp
 
 	offset -= 0.14;
 
@@ -228,51 +223,36 @@ int rover::findEdgeVer(int x, int start, int stop) {
     return -1;
 }
 
-<<<<<<< HEAD
-void rover::setSpeed(int depth) {
-	if (depth > 150 || depth == -1) {
-		currentSpeed = 0.55;
-	}
-	else if (depth > 100) {
-		currentSpeed = 0.47;
-	}
-	// else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-	// 	currentSpeed = 0.30;
-	// }
-	else {
-		currentSpeed = 0.44;
-=======
 void rover::setSpeed(bool spee) {
-	// if (depth == -1)
-	// {
-	// 	currentSpeed *= SPEED_INCREASE_FACTOR;
+	if (spee)
+	{
+		currentSpeed *= SPEED_INCREASE_FACTOR;
 
-	// 	if (currentSpeed > MAX_SPEED)
-	// 		currentSpeed = MAX_SPEED;
-	// }
-	// else
-	// {
-	// 	// TODO: lineare decrease hier?
-	// 	currentSpeed = MIN_SPEED;
-	// }
-
-	if (spee) {
-		currentSpeed = 0.55;
-		// pixy.setLamp(0, 0);
+		if (currentSpeed > MAX_SPEED)
+			currentSpeed = MAX_SPEED;
 	}
-	// else if (depth > 70) {
-	// 	currentSpeed = 0.40;
+	else
+	{
+		// TODO: lineare decrease hier?
+		currentSpeed = MIN_SPEED;
+	}
+
+	// if (spee) {
+	// 	currentSpeed = 0.55;
 	// 	// pixy.setLamp(0, 0);
 	// }
-	// else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-	// 	currentSpeed = 0.30;
-	// 	pixy.setLamp(1, 1);
+	// // else if (depth > 70) {
+	// // 	currentSpeed = 0.40;
+	// // 	// pixy.setLamp(0, 0);
+	// // }
+	// // else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+	// // 	currentSpeed = 0.30;
+	// // 	pixy.setLamp(1, 1);
+	// // }
+	// else {
+	// 	currentSpeed = 0.43;
+	// 	// pixy.setLamp(0, 0);
 	// }
-	else {
-		currentSpeed = 0.43;
-		// pixy.setLamp(0, 0);
->>>>>>> tmp
-	}
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
@@ -300,98 +280,6 @@ int rover::getDepth(int startHeight) {
 	if (dist3 > dist) dist = dist3;
 
 	return startHeight - dist;
-<<<<<<< HEAD
-}
-
-point rover::getDir(point prev) {
-	prev = reverse_point(prev.x, prev.y);
-
-	int startPixel = 20, x = 0, y = 0, offset = 20, leftEdge, rightEdge, i = 0;
-	uint8_t c1 = 0, c2 = 0;
-	point p = {res_x / 2, res_y - 1};
-	float a = ((prev.x - p.x) / (prev.y - p.y));
-
-	if (a > 1) a = 1;
-	else if (a < -1) a = -1;
-
-	a = 0;
-
-//	printf("(%d, %d) -> (%d, %d) = %d\n", (int)(p.x), (int)p.y, (int)(prev.x), (int)(prev.y), (int)(a * 1000));
-
-	y = p.y;
-
-	while (y > 0) {
-		c1 = c2;
-
-		x = round(p.x - i * a);
-		y = p.y - i;
-
-		pixy.video.getRGB(x, y, &c2, false);
-
-//		printf("(%d, %d)\n", x, y);
-
-		if (c1 - c2 > THRESHOLD) break;
-
-		i++;
-	}
-
-	p = {x, y};
-
-//	printf("p: (%d, %d)\n", (int)p.x, (int)p.y);
-
-	p = convert_point(p.x, p.y);
-	p.y -= offset;
-	printf("dist: %d, ", (int)p.y);
-	p = reverse_point(p.x, p.y);
-	
-	c1 = c2 = 0;
-
-	for (x = p.x; x >= 0; x--) {
-		c1 = c2;
-		pixy.video.getRGB(x, p.y, &c2, false);
-
-		if (c1 - c2 > THRESHOLD) {
-			leftEdge = x;
-			break;
-		}
-
-		if (x == 0) leftEdge = -1;
-	}
-
-	c1 = c2 = 0;
-
-	for (x = p.x; x < res_x; x++) {
-		c1 = c2;
-		pixy.video.getRGB(x, p.y, &c2, false);
-
-		if (c1 - c2 > THRESHOLD) {
-			rightEdge = x;
-			break;
-		}
-		
-		if (x == res_x - 1) rightEdge = -1;
-	}
-
-	if (leftEdge == -1 && rightEdge != -1) {
-		p = convert_point(rightEdge, p.y);
-		p.x -= 25;
-	}
-	else if (leftEdge == -1 && rightEdge != -1) {
-		p = convert_point(leftEdge, p.y);
-		p.x += 25;
-	}
-	else if (leftEdge == -1 && rightEdge == -1) {
-		p = convert_point(res_x / 2, p.y);
-	}
-	else {
-		p = convert_point((leftEdge + rightEdge) / 2.0, p.y);
-	}
-
-	printf("L: %d, R: %d\n", leftEdge, rightEdge);
-
-	return p;
-=======
->>>>>>> tmp
 }
 
 void rover::checkTrackSignals()
@@ -700,7 +588,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			car.step(false);
+			car.step(true);
 			break;
 		case _CHECK_BATTERY:
 			car.stop();

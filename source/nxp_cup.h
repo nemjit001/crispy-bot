@@ -55,9 +55,9 @@ extern "C"
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 // #define CAM_ANGLE (64 * M_PI / 180.0)
 
-#define MAX_SPEED 0.5
+#define MAX_SPEED 0.55
 #define MIN_SPEED 0.45
-#define SPEED_INCREASE_FACTOR 1.05
+#define SPEED_INCREASE_FACTOR 1.035
 #define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
 typedef struct {
@@ -116,6 +116,7 @@ public:
         depth = line1;
 
         frameCounter = 0;
+        currentSpeed = MIN_SPEED;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -153,16 +154,13 @@ public:
         float dist = p2.y;
 
         if (dist - 50 > mid.y) {
-            frameCounter++;
-            if (frameCounter >= 3) {
-                spee = true;
-                pixy.setLamp(1, 1);
-                p2 = reverse_point(res_x / 2, dist - 50);
-                mid = midUpper = getMid(midUpper, p2.y);
-            }
+            spee = true;
+            pixy.setLamp(1, 1);
+            p2 = reverse_point(res_x / 2, dist - 50);
+            mid = midUpper = getMid(midUpper, p2.y);
         }
         else {
-            frameCounter = 0;
+            // frameCounter = 0;
             pixy.setLamp(0, 0);
         }
 
