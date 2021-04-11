@@ -73,8 +73,8 @@ private:
     engineModule engine;
 
     bool stopTrackSignal = false;
-    int res_x, res_y, line1, line2, depth;
-    point midLower, midUpper, dir;
+    int res_x, res_y, line1, line2, depth, frameCounter;
+    point midLower, midUpper;
     uint8_t *camData1, *camData2;
     float currentSpeed;
 
@@ -89,7 +89,7 @@ private:
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
-    void setSpeed(int depth);
+    void setSpeed(bool spee);
     void setWheels(point p);
     
     void checkTrackSignals();
@@ -109,11 +109,13 @@ public:
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
 
-        dir = midLower = midUpper = {0, 100};
+        midLower = midUpper = {0, 100};
 
         line1 = res_y - 25;
 
         depth = line1;
+
+        frameCounter = 0;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
@@ -135,7 +137,8 @@ public:
     void printCamData();
 
     void step(bool motors) {
-        point mid, p1;
+        point mid, p1, p2;
+        bool spee = false;
 
         if (stopTrackSignal)
         {
@@ -143,19 +146,35 @@ public:
             return;
         }
 
-        dir = getDir(dir);
-        float dist = dir.y;
-        
+        mid = midLower = getMid(midLower, line1);
 
-        if (dist > 100) {
-            pixy.setLamp(1, 1);
+        depth = getDepth(res_y - 1);
+        p2 = convert_point(res_x / 2, depth);
+        float dist = p2.y;
+
+        if (dist - 50 > mid.y) {
+            frameCounter++;
+            if (frameCounter >= 3) {
+                spee = true;
+                pixy.setLamp(1, 1);
+                p2 = reverse_point(res_x / 2, dist - 50);
+                mid = midUpper = getMid(midUpper, p2.y);
+            }
         }
         else {
+            frameCounter = 0;
             pixy.setLamp(0, 0);
         }
+
+        // if (dist < 50) {
+        //     pixy.setLamp(1, 1);
+        // }
+        // else {
+        //     pixy.setLamp(0, 0);
+        // }
         
-		setWheels(dir);
-        if (motors) setSpeed((int)dist);
+		setWheels(mid);
+        if (motors) setSpeed(spee);
         else engine.setSpeed(0, 0);
         checkTrackSignals();
 	};
