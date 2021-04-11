@@ -321,7 +321,7 @@ void board_device_setup()
 int main(void)
 {
 	board_device_setup();
-	// print_string("INITIALIZING BOARD\n\r\0");
+	print_string("INITIALIZING BOARD\n\r\0");
 
 	// bitmask containing board switch state
 	static uint8_t switch_state = 0x0;
@@ -359,6 +359,9 @@ int main(void)
 			break;
 		case _CHECK_SERVO:
 			mLeds_Write(kMaskLed1, kLedOn);
+			char test[20];
+			sprintf(test, "num blocks: %d\n\r", test_pixy.ccc.numBlocks);
+			print_string(test);
 			car.stop();
 			car.test_servo();
 			break;
