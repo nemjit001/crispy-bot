@@ -31,6 +31,8 @@ extern "C"
 #include "Applications/gInput.h"
 #include "Applications/gCompute.h"
 #include "Applications/gOutput.h"
+
+#include "arm_math.h"
 }
 
 /* Pixy 2 */
@@ -42,13 +44,22 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 30.0      // In cm, wiel tot lijn
+#define LINE_DIST 71.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
-#define CAM_ANGLE atan2(CAM_HEIGHT, LINE_DIST + LENS_WHEELS_DIST)
+
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
 #define WIDTH_MUL 1
-#define STEERING_RANGE 0.733038
+#define STEERING_RANGE 0.735080959
+#define THRESHOLD 5
+
+#define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
+// #define CAM_ANGLE (64 * M_PI / 180.0)
+
+#define MAX_SPEED 0.5
+#define MIN_SPEED 0.45
+#define SPEED_INCREASE_FACTOR 1.05
+#define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
 typedef struct {
     double x;
@@ -62,32 +73,29 @@ private:
     servoModule *servo;
     engineModule engine;
 
-	double prev_angle;
-	int prev_x0, prev_y0;
-	point prev_p0, prev_p1;
-    float mid1, mid2;
-    float lineWidth = WIDTH_MUL * sqrt(CAM_HEIGHT * CAM_HEIGHT + (LINE_DIST + LENS_WHEELS_DIST) * (LINE_DIST + LENS_WHEELS_DIST));
-    float threshold;
-    int res_x, res_y, line1, line2;
-    int firstEdge, secEdge, thirdEdge, fourEdge;
+    bool stopTrackSignal = false;
+    int res_x, res_y, line1, line2, depth;
+    point midLower, midUpper;
     uint8_t *camData1, *camData2;
-    float speed;
-    int finished;
+    float currentSpeed;
 
-    void set_steering_angle();
     void engine_kpod();
-    void set_servo(double angle);
-    int feature_left_right(int vector_start);
-    bool clear_to_steer(int left_right);
 
+    int findEdgeHor(int y, int start, int stop);
+    int findEdgeVer(int x, int start, int stop);
     int findEdge(uint8_t camData[], int start, int stop);
-    void setMid();
-    void setWheels();
-    void setSpeed();
-    void setThreshold();
-    void setCamData(int y, uint8_t camData[]);
-    void printCamData();
-    void checkFinish();
+    point getMid(point prev, int y);
+    point getMid(point prev, int y, int &firstEdge, int &secEdge);
+    int getDepth(int startHeight);
+    void getCamData(int y, uint8_t camData[]);
+
+    void setSpeed(int depth);
+    void setWheels(point p);
+    
+    void checkTrackSignals();
+
+    point convert_point(int x, int y);
+    point reverse_point(float x, float y);
 
 public:
     rover() {
@@ -100,15 +108,15 @@ public:
 
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
-        line1 = res_y * 3/4;
-        line2 = res_y * 1/4;
-        mid1 = res_x / 2.0;
-        mid2 = res_x / 2.0;
+
+        midLower = midUpper = {0, 100};
+
+        line1 = res_y - 25;
+
+        depth = line1;
 
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
-
-        threshold = 10;
     }
 
     ~rover()
@@ -120,19 +128,40 @@ public:
 
     void test_servo();
     void test_rgb();
+    void printLineDist();
+    void printLineDist2();
+    void printLineDist3();
+    void printCamData();
 
-    void step() {
-        if(finished == 0){
-            setCamData(line1, camData1);
-            setCamData(line2, camData2);
-            setMid();
-            setWheels();
-            setSpeed();
-            // printCamData();
+    void step(bool motors) {
+        point mid, p1;
+
+        if (stopTrackSignal)
+        {
+            stop();
+            return;
+        }
+
+        mid = midLower = getMid(midLower, line1);
+        // mid.y -= 15;
+
+        depth = getDepth(line1);
+        p1 = convert_point(res_x / 2, depth);
+        float dist = p1.y;
+
+        if (dist > 100) {
+            // pixy.setLamp(1, 1);
+            getCamData(depth + 10, camData2);
+            mid = midUpper = getMid(midUpper, depth + 10);
         }
         else {
-            engine.setSpeed(0.0, 0.0);
+            // pixy.setLamp(0, 0);
         }
+        
+		setWheels(mid);
+        if (motors) setSpeed((int)dist);
+        else engine.setSpeed(0, 0);
+        checkTrackSignals();
 	};
 
 	Pixy2SPI_SS &getPixy() { return this->pixy; };
