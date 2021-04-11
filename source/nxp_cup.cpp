@@ -168,11 +168,7 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-<<<<<<< HEAD
-	offset = (deg / STEERING_RANGE);// * (1 - (speed/4));
-=======
 	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
->>>>>>> 4560e576ad68f80f2900f36d08d0199c0580013a
 
 	offset -= 0.14;
 
@@ -227,7 +223,7 @@ int rover::findEdgeVer(int x, int start, int stop) {
     return -1;
 }
 
-void rover::setSpeed(int depth) {
+void rover::setSpeed(bool spee) {
 	// if (depth == -1)
 	// {
 	// 	currentSpeed *= SPEED_INCREASE_FACTOR;
@@ -241,47 +237,49 @@ void rover::setSpeed(int depth) {
 	// 	currentSpeed = MIN_SPEED;
 	// }
 
-	if (depth > 100 || depth == -1) {
+	if (spee) {
 		currentSpeed = 0.55;
-		pixy.setLamp(0, 0);
+		// pixy.setLamp(0, 0);
 	}
-	else if (depth > 70) {
-		currentSpeed = 0.47;
-		pixy.setLamp(0, 0);
-	}
-	else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-		currentSpeed = 0.30;
-		pixy.setLamp(1, 1);
-	}
+	// else if (depth > 70) {
+	// 	currentSpeed = 0.40;
+	// 	// pixy.setLamp(0, 0);
+	// }
+	// else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+	// 	currentSpeed = 0.30;
+	// 	pixy.setLamp(1, 1);
+	// }
 	else {
-		currentSpeed = 0.44;
-		pixy.setLamp(0, 0);
+		currentSpeed = 0.43;
+		// pixy.setLamp(0, 0);
 	}
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
-	speed = currentSpeed;
 }
 
 int rover::getDepth(int startHeight) {
-	// int dist = findEdgeVer(res_x / 2, startHeight, 0);
-
-	// if (dist == -1) return -1;
-
-	// return dist;
-
-	uint8_t data[startHeight];
-	uint8_t c;
+	uint8_t data1[startHeight], data2[startHeight], data3[startHeight];
+	uint8_t c1, c2, c3;
 
 	for (int i = 0; i < startHeight; i++) {
-		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c, 0);
-		data[i] = c;
+		pixy.video.getRGB(res_x / 2 - 10, startHeight - i - 1, &c1, 0);
+		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c2, 0);
+		pixy.video.getRGB(res_x / 2 + 10, startHeight - i - 1, &c3, 0);
+		data1[i] = c1;
+		data2[i] = c2;
+		data3[i] = c3;
 	}
 
-	int dist = findEdge(data, 0, startHeight - 1);
+	int dist1 = findEdge(data1, 0, startHeight - 1);
+	int dist2 = findEdge(data2, 0, startHeight - 1);
+	int dist3 = findEdge(data3, 0, startHeight - 1);
 
-	if (dist == -1) return -1;
+	if (dist1 == -1 || dist2 == -1 || dist3 == -1) return -1;
+	int dist = dist1;
+	if (dist2 > dist) dist = dist2;
+	if (dist3 > dist) dist = dist3;
 
-	return res_y - dist;
+	return startHeight - dist;
 }
 
 void rover::checkTrackSignals()
@@ -454,9 +452,9 @@ void rover::printCamData() {
 	}
 
 	// Upper line
-	mid = getMid(midUpper, depth + 5, firstEdge, secEdge);
-	p1 = convert_point(firstEdge, depth + 5);
-	p2 = convert_point(secEdge, depth + 5);
+	mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
+	p1 = convert_point(firstEdge, depth + 20);
+	p2 = convert_point(secEdge, depth + 20);
 
 	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
