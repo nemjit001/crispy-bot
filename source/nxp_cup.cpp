@@ -168,7 +168,8 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
+//	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
+	offset = deg / STEERING_RANGE;
 
 	offset -= 0.14;
 
@@ -224,34 +225,17 @@ int rover::findEdgeVer(int x, int start, int stop) {
 }
 
 void rover::setSpeed(int depth) {
-	// if (depth == -1)
-	// {
-	// 	currentSpeed *= SPEED_INCREASE_FACTOR;
-
-	// 	if (currentSpeed > MAX_SPEED)
-	// 		currentSpeed = MAX_SPEED;
-	// }
-	// else
-	// {
-	// 	// TODO: lineare decrease hier?
-	// 	currentSpeed = MIN_SPEED;
-	// }
-
-	if (depth > 100 || depth == -1) {
+	if (depth > 150 || depth == -1) {
 		currentSpeed = 0.55;
-		pixy.setLamp(0, 0);
 	}
-	else if (depth > 70) {
+	else if (depth > 100) {
 		currentSpeed = 0.47;
-		pixy.setLamp(0, 0);
 	}
-	else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-		currentSpeed = 0.30;
-		pixy.setLamp(1, 1);
-	}
+	// else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+	// 	currentSpeed = 0.30;
+	// }
 	else {
 		currentSpeed = 0.44;
-		pixy.setLamp(0, 0);
 	}
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
@@ -276,7 +260,96 @@ int rover::getDepth(int startHeight) {
 
 	if (dist == -1) return -1;
 
-	return res_y - dist;
+	return startHeight - dist;
+}
+
+point rover::getDir(point prev) {
+	prev = reverse_point(prev.x, prev.y);
+
+	int startPixel = 20, x = 0, y = 0, offset = 20, leftEdge, rightEdge, i = 0;
+	uint8_t c1 = 0, c2 = 0;
+	point p = {res_x / 2, res_y - 1};
+	float a = ((prev.x - p.x) / (prev.y - p.y));
+
+	if (a > 1) a = 1;
+	else if (a < -1) a = -1;
+
+	a = 0;
+
+//	printf("(%d, %d) -> (%d, %d) = %d\n", (int)(p.x), (int)p.y, (int)(prev.x), (int)(prev.y), (int)(a * 1000));
+
+	y = p.y;
+
+	while (y > 0) {
+		c1 = c2;
+
+		x = round(p.x - i * a);
+		y = p.y - i;
+
+		pixy.video.getRGB(x, y, &c2, false);
+
+//		printf("(%d, %d)\n", x, y);
+
+		if (c1 - c2 > THRESHOLD) break;
+
+		i++;
+	}
+
+	p = {x, y};
+
+//	printf("p: (%d, %d)\n", (int)p.x, (int)p.y);
+
+	p = convert_point(p.x, p.y);
+	p.y -= offset;
+	printf("dist: %d, ", (int)p.y);
+	p = reverse_point(p.x, p.y);
+	
+	c1 = c2 = 0;
+
+	for (x = p.x; x >= 0; x--) {
+		c1 = c2;
+		pixy.video.getRGB(x, p.y, &c2, false);
+
+		if (c1 - c2 > THRESHOLD) {
+			leftEdge = x;
+			break;
+		}
+
+		if (x == 0) leftEdge = -1;
+	}
+
+	c1 = c2 = 0;
+
+	for (x = p.x; x < res_x; x++) {
+		c1 = c2;
+		pixy.video.getRGB(x, p.y, &c2, false);
+
+		if (c1 - c2 > THRESHOLD) {
+			rightEdge = x;
+			break;
+		}
+		
+		if (x == res_x - 1) rightEdge = -1;
+	}
+
+	if (leftEdge == -1 && rightEdge != -1) {
+		p = convert_point(rightEdge, p.y);
+		p.x -= 25;
+	}
+	else if (leftEdge == -1 && rightEdge != -1) {
+		p = convert_point(leftEdge, p.y);
+		p.x += 25;
+	}
+	else if (leftEdge == -1 && rightEdge == -1) {
+		p = convert_point(res_x / 2, p.y);
+	}
+	else {
+		p = convert_point((leftEdge + rightEdge) / 2.0, p.y);
+	}
+
+	printf("L: %d, R: %d\n", leftEdge, rightEdge);
+
+	return p;
 }
 
 void rover::checkTrackSignals()
@@ -417,10 +490,31 @@ void rover::printLineDist3() {
     }
 
 	int firstEdge, secEdge;
-	point mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
-	int x = (int)reverse_point(mid.x, mid.y).x;
+	point mid = getMid(midUpper, depth + 10, firstEdge, secEdge);
+	point p = reverse_point(mid.x, mid.y);
+	int x = (int)p.x;
+	
+	p = convert_point(res_x / 2, depth);
+	int dist = (int)p.y;
 
-	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
+	sprintf(buf, "%d,%d,%d,%d,\r\n", x, firstEdge, secEdge, dist);
+	print_string(buf);
+}
+
+void rover::printLineDist4() {
+	char buf[32];
+	uint8_t c;
+
+    for (int i = 0; i < res_y; i--) {
+		pixy.video.getRGB(res_x / 2, i, &c, false);
+		sprintf(buf, "%d,", c);
+        print_string(buf);
+    }
+	
+	point p = convert_point(res_x / 2, depth);
+	int dist = (int)p.y;
+
+	sprintf(buf, "%d,%d,\r\n", depth, dist);
 	print_string(buf);
 }
 
@@ -564,7 +658,7 @@ int main(void)
 		switch (switch_state)
 		{
 		case _NORMAL_RUN:
-			car.step(true);
+			car.step(false);
 			break;
 		case _CHECK_BATTERY:
 			car.stop();
@@ -582,7 +676,7 @@ int main(void)
 			break;
 		case _LINE_DIST:
 			car.step(false);
-			car.printLineDist2();
+			car.printLineDist4();
 			break;
 		case _CAM_DATA:
 			car.step(false);

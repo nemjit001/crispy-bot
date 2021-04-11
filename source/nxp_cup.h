@@ -49,9 +49,8 @@ extern "C"
 
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
-#define WIDTH_MUL 1
 #define STEERING_RANGE 0.735080959
-#define THRESHOLD 5
+#define THRESHOLD 10
 
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 // #define CAM_ANGLE (64 * M_PI / 180.0)
@@ -75,7 +74,7 @@ private:
 
     bool stopTrackSignal = false;
     int res_x, res_y, line1, line2, depth;
-    point midLower, midUpper;
+    point midLower, midUpper, dir;
     uint8_t *camData1, *camData2;
     float currentSpeed;
 
@@ -86,6 +85,7 @@ private:
     int findEdge(uint8_t camData[], int start, int stop);
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
+    point getDir(point prev);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -109,7 +109,7 @@ public:
         res_x = pixy.frameWidth;
         res_y = pixy.frameHeight;
 
-        midLower = midUpper = {0, 100};
+        dir = midLower = midUpper = {0, 100};
 
         line1 = res_y - 25;
 
@@ -131,6 +131,7 @@ public:
     void printLineDist();
     void printLineDist2();
     void printLineDist3();
+    void printLineDist4();
     void printCamData();
 
     void step(bool motors) {
@@ -142,23 +143,18 @@ public:
             return;
         }
 
-        mid = midLower = getMid(midLower, line1);
-        // mid.y -= 15;
-
-        depth = getDepth(line1);
-        p1 = convert_point(res_x / 2, depth);
-        float dist = p1.y;
+        dir = getDir(dir);
+        float dist = dir.y;
+        
 
         if (dist > 100) {
-            // pixy.setLamp(1, 1);
-            getCamData(depth + 10, camData2);
-            mid = midUpper = getMid(midUpper, depth + 10);
+            pixy.setLamp(1, 1);
         }
         else {
-            // pixy.setLamp(0, 0);
+            pixy.setLamp(0, 0);
         }
         
-		setWheels(mid);
+		setWheels(dir);
         if (motors) setSpeed((int)dist);
         else engine.setSpeed(0, 0);
         checkTrackSignals();
