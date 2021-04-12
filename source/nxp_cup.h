@@ -49,16 +49,15 @@ extern "C"
 
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
-#define WIDTH_MUL 1
 #define STEERING_RANGE 0.735080959
-#define THRESHOLD 5
+#define THRESHOLD 7
 
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 // #define CAM_ANGLE (64 * M_PI / 180.0)
 
-#define MAX_SPEED 0.5
+#define MAX_SPEED 0.55
 #define MIN_SPEED 0.45
-#define SPEED_INCREASE_FACTOR 1.05
+#define SPEED_INCREASE_FACTOR 1.035
 #define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
 typedef struct {
@@ -74,7 +73,7 @@ private:
     engineModule engine;
 
     bool stopTrackSignal = false;
-    int res_x, res_y, line1, line2, depth;
+    int res_x, res_y, line1, line2, depth, frameCounter;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
     float currentSpeed;
@@ -90,7 +89,7 @@ private:
     void getCamData(int y, uint8_t camData[]);
     int getFinish();
 
-    void setSpeed(int depth);
+    void setSpeed(bool spee);
     void setWheels(point p);
     
     void checkTrackSignals();
@@ -116,6 +115,9 @@ public:
 
         depth = line1;
 
+        frameCounter = 0;
+        currentSpeed = MIN_SPEED;
+
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
     }
@@ -132,10 +134,13 @@ public:
     void printLineDist();
     void printLineDist2();
     void printLineDist3();
+    void printLineDist4();
     void printCamData();
 
     void step(bool motors) {
-        point mid, p1;
+        point mid, p1, p2;
+        bool spee = false;
+        int firstEdge, secEdge;
 
         if (stopTrackSignal)
         {
@@ -143,25 +148,48 @@ public:
             return;
         }
 
-        mid = midLower = getMid(midLower, line1);
-        // mid.y -= 15;
+        mid = midLower = getMid(midLower, line1, firstEdge, secEdge);
 
+        depth = getDepth(res_y - 1);
+        p2 = convert_point(res_x / 2, depth);
+        float dist = p2.y;
+
+<<<<<<< HEAD
         depth = getDepth(line1);
         stopTrackSignal = getFinish();
         p1 = convert_point(res_x / 2, depth);
         float dist = p1.y;
+=======
+        if (firstEdge == -1 || secEdge == -1) {
+            p2 = reverse_point(res_x / 2, dist - 50);
+            p2 = getMid(midUpper, p2.y, firstEdge, secEdge);
+            if (firstEdge != -1 && secEdge != -1) {
+                mid = midUpper = p2;
+                // spee = true;
+                pixy.setLamp(1, 1);
+            }
+        }
+>>>>>>> def167d3aa707f06219430c428e400277e413704
 
-        if (dist > 100) {
-            // pixy.setLamp(1, 1);
-            getCamData(depth + 10, camData2);
-            mid = midUpper = getMid(midUpper, depth + 10);
+        if (dist - 50 > mid.y) {
+            spee = true;
+            pixy.setLamp(1, 1);
+            p2 = reverse_point(res_x / 2, dist - 50);
+            mid = midUpper = getMid(midUpper, p2.y);
         }
         else {
-            // pixy.setLamp(0, 0);
+            pixy.setLamp(0, 0);
         }
+
+        // if (dist < 50) {
+        //     pixy.setLamp(1, 1);
+        // }
+        // else {
+        //     pixy.setLamp(0, 0);
+        // }
         
 		setWheels(mid);
-        if (motors) setSpeed((int)dist);
+        if (motors) setSpeed(spee);
         else engine.setSpeed(0, 0);
         checkTrackSignals();
 	};

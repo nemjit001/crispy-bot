@@ -137,6 +137,9 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 		p = convert_point((firstEdge + secEdge) / 2.0, y);
 	}
 
+	printf("L: %d, R: %d\n", firstEdge, secEdge);
+
+	// -34, -21
     return p;
 }
 
@@ -223,56 +226,65 @@ int rover::findEdgeVer(int x, int start, int stop) {
     return -1;
 }
 
-void rover::setSpeed(int depth) {
-	// if (depth == -1)
-	// {
-	// 	currentSpeed *= SPEED_INCREASE_FACTOR;
+void rover::setSpeed(bool spee) {
+	if (spee)
+	{
+		currentSpeed *= SPEED_INCREASE_FACTOR;
 
-	// 	if (currentSpeed > MAX_SPEED)
-	// 		currentSpeed = MAX_SPEED;
+		if (currentSpeed > MAX_SPEED)
+			currentSpeed = MAX_SPEED;
+	}
+	else
+	{
+		// TODO: lineare decrease hier?
+		currentSpeed = MIN_SPEED;
+	}
+
+	// if (spee) {
+	// 	currentSpeed = 0.55;
+	// 	// pixy.setLamp(0, 0);
 	// }
-	// else
-	// {
-	// 	// TODO: lineare decrease hier?
-	// 	currentSpeed = MIN_SPEED;
+	// // else if (depth > 70) {
+	// // 	currentSpeed = 0.40;
+	// // 	// pixy.setLamp(0, 0);
+	// // }
+	// // else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+	// // 	currentSpeed = 0.30;
+	// // 	pixy.setLamp(1, 1);
+	// // }
+	// else {
+	// 	currentSpeed = 0.43;
+	// 	// pixy.setLamp(0, 0);
 	// }
 
-	if (depth > 150 || depth == -1) {
-		currentSpeed = 0.55;
-		pixy.setLamp(0, 0);
-	}
-	else if (depth > 70) {
-		currentSpeed = 0.47;
-		pixy.setLamp(0, 0);
-	}
-	else {
-		currentSpeed = 0.44;
-		pixy.setLamp(0, 0);
-	}
+	currentSpeed = 0.43;
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
 
 int rover::getDepth(int startHeight) {
-	// int dist = findEdgeVer(res_x / 2, startHeight, 0);
-
-	// if (dist == -1) return -1;
-
-	// return dist;
-
-	uint8_t data[startHeight];
-	uint8_t c;
+	uint8_t data1[startHeight], data2[startHeight], data3[startHeight];
+	uint8_t c1, c2, c3;
 
 	for (int i = 0; i < startHeight; i++) {
-		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c, 0);
-		data[i] = c;
+		pixy.video.getRGB(res_x / 2 - 10, startHeight - i - 1, &c1, 0);
+		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c2, 0);
+		pixy.video.getRGB(res_x / 2 + 10, startHeight - i - 1, &c3, 0);
+		data1[i] = c1;
+		data2[i] = c2;
+		data3[i] = c3;
 	}
 
-	int dist = findEdge(data, 0, startHeight - 1);
+	int dist1 = findEdge(data1, 0, startHeight - 1);
+	int dist2 = findEdge(data2, 0, startHeight - 1);
+	int dist3 = findEdge(data3, 0, startHeight - 1);
 
-	if (dist == -1) return -1;
+	if (dist1 == -1 || dist2 == -1 || dist3 == -1) return -1;
+	int dist = dist1;
+	if (dist2 > dist) dist = dist2;
+	if (dist3 > dist) dist = dist3;
 
-	return res_y - dist;
+	return startHeight - dist;
 }
 
 int rover::getFinish(){
@@ -432,10 +444,31 @@ void rover::printLineDist3() {
     }
 
 	int firstEdge, secEdge;
-	point mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
-	int x = (int)reverse_point(mid.x, mid.y).x;
+	point mid = getMid(midUpper, depth + 10, firstEdge, secEdge);
+	point p = reverse_point(mid.x, mid.y);
+	int x = (int)p.x;
+	
+	p = convert_point(res_x / 2, depth);
+	int dist = (int)p.y;
 
-	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
+	sprintf(buf, "%d,%d,%d,%d,\r\n", x, firstEdge, secEdge, dist);
+	print_string(buf);
+}
+
+void rover::printLineDist4() {
+	char buf[32];
+	uint8_t c;
+
+    for (int i = 0; i < res_y; i--) {
+		pixy.video.getRGB(res_x / 2, i, &c, false);
+		sprintf(buf, "%d,", c);
+        print_string(buf);
+    }
+	
+	point p = convert_point(res_x / 2, depth);
+	int dist = (int)p.y;
+
+	sprintf(buf, "%d,%d,\r\n", depth, dist);
 	print_string(buf);
 }
 
@@ -464,9 +497,9 @@ void rover::printCamData() {
 	}
 
 	// Upper line
-	mid = getMid(midUpper, depth + 5, firstEdge, secEdge);
-	p1 = convert_point(firstEdge, depth + 5);
-	p2 = convert_point(secEdge, depth + 5);
+	mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
+	p1 = convert_point(firstEdge, depth + 20);
+	p2 = convert_point(secEdge, depth + 20);
 
 	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
@@ -600,7 +633,7 @@ int main(void)
 			break;
 		case _LINE_DIST:
 			car.step(false);
-			car.printLineDist2();
+			car.printLineDist3();
 			break;
 		case _CAM_DATA:
 			car.step(false);
