@@ -73,7 +73,7 @@ private:
     engineModule engine;
 
     bool stopTrackSignal = false, spee;
-    int res_x, res_y, line1, line2, depth, frameCounter;
+    int res_x, res_y, line1, line2, depth_p, frameCounter;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
     float currentSpeed, dist;
@@ -88,14 +88,15 @@ private:
     float getAngle(point p);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
+    int getFinish();
 
     void setSpeed(bool spee);
     void setWheels(point p);
     
     void checkTrackSignals();
 
-    point convert_point(int x, int y);
-    point reverse_point(float x, float y);
+    point pixel_to_point(int x, int y);
+    point point_to_pixel(float x, float y);
 
 public:
     rover() {
@@ -113,7 +114,7 @@ public:
 
         line1 = res_y - 25;
 
-        depth = line1;
+        depth_p = line1;
 
         frameCounter = 0;
         currentSpeed = MIN_SPEED;
@@ -139,9 +140,9 @@ public:
     void printCamData();
 
     void step(bool motors) {
-        point mid, p1, p2;
-        spee = false;
-        // int firstEdge, secEdge;
+        point direction, p1, p2;
+        bool spee = false;
+        int firstEdge, secEdge;
 
         if (stopTrackSignal)
         {
@@ -151,27 +152,27 @@ public:
 
         midLower = getMid(midLower, line1);
 
-        depth = getDepth(res_y - 1);
-        p2 = convert_point(res_x / 2, depth);
+        depth_p = getDepth(res_y - 1);
+        p2 = pixel_to_point(res_x / 2, depth_p);
         dist = p2.y;
         // if (dist > 150) dist = 150;
         dist -= 50;
-        depth = reverse_point(res_x / 2, dist).y;
+        depth_p = point_to_pixel(res_x / 2, dist).y;
 
         // float angleDiff = abs(atan2(midLower.x, midLower.y) - atan2(midUpper.x, midUpper.y));
         //  && angleDiff < (20 * (M_PI / 180.0))
 
-        if (dist - 50 > mid.y) {
+        if (dist > direction.y) {
             spee = true;
             pixy.setLamp(1, 1);
-            mid = midUpper = getMid(midUpper, depth);
+            direction = midUpper = getMid(midUpper, depth_p);
         }
         else {
             pixy.setLamp(0, 0);
-            mid = midLower;
+            direction = midLower;
         }
-
-		setWheels(mid);
+        
+		setWheels(direction);
         if (motors) setSpeed(spee);
         else engine.setSpeed(0, 0);
         checkTrackSignals();
