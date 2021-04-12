@@ -44,11 +44,11 @@ extern "C"
 #include "engine_module.h"
 
 #define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 71.0      // In cm, wiel tot lijn
+#define LINE_DIST 80.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
-#define FOV_X (60 * M_PI / 180.0)
-#define FOV_Y (40 * M_PI / 180.0)
+#define FOV_X (68 * M_PI / 180.0)
+#define FOV_Y (45 * M_PI / 180.0)
 #define STEERING_RANGE 0.735080959
 #define THRESHOLD 7
 
@@ -56,7 +56,7 @@ extern "C"
 // #define CAM_ANGLE (64 * M_PI / 180.0)
 
 #define MAX_SPEED 0.55
-#define MIN_SPEED 0.45
+#define MIN_SPEED 0.43
 #define SPEED_INCREASE_FACTOR 1.035
 #define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
@@ -90,7 +90,7 @@ private:
     void getCamData(int y, uint8_t camData[]);
     int getFinish();
 
-    void setSpeed(bool spee);
+    void setSpeed(float dist);
     void setWheels(point p);
     
     void checkTrackSignals();
@@ -112,7 +112,7 @@ public:
 
         midLower = midUpper = {0, 100};
 
-        line1 = res_y - 25;
+        line1 = point_to_pixel(0, 50).y;
 
         depth_p = line1;
 
@@ -141,7 +141,7 @@ public:
 
     void step(bool motors) {
         point direction, p1, p2;
-        bool spee = false;
+        spee = false;
         int firstEdge, secEdge;
 
         if (stopTrackSignal)
@@ -151,21 +151,22 @@ public:
         }
 
         midLower = getMid(midLower, line1);
+        // midLower.y -= 30;
 
         depth_p = getDepth(res_y - 1);
         p2 = pixel_to_point(res_x / 2, depth_p);
         dist = p2.y;
         // if (dist > 150) dist = 150;
-        dist -= 50;
+        dist -= 60;
         depth_p = point_to_pixel(res_x / 2, dist).y;
 
         // float angleDiff = abs(atan2(midLower.x, midLower.y) - atan2(midUpper.x, midUpper.y));
         //  && angleDiff < (20 * (M_PI / 180.0))
 
-        if (dist > direction.y) {
+        if (dist > midLower.y) {
             spee = true;
             pixy.setLamp(1, 1);
-            direction = midUpper = getMid(midUpper, depth_p);
+            direction = midUpper = getMid({0, 100}, depth_p);
         }
         else {
             pixy.setLamp(0, 0);
@@ -173,7 +174,7 @@ public:
         }
         
 		setWheels(direction);
-        if (motors) setSpeed(spee);
+        if (motors) setSpeed(dist);
         else engine.setSpeed(0, 0);
         checkTrackSignals();
 	};
