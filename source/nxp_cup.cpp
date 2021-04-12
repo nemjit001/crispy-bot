@@ -620,9 +620,6 @@ int main(void)
 			break;
 		case _CHECK_SERVO:
 			mLeds_Write(kMaskLed1, kLedOn);
-			char test[20];
-			sprintf(test, "num blocks: %d\n\r", test_pixy.ccc.numBlocks);
-			print_string(test);
 			car.stop();
 			car.test_servo();
 			break;
