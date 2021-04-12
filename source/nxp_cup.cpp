@@ -47,7 +47,7 @@
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
-point rover::convert_point(int x, int y) {
+point rover::pixel_to_point(int x, int y) {
     double angleX = FOV_X * (x / (double)res_x) - (FOV_X / 2.0);
     double angleY = CAM_ANGLE + (FOV_Y * ((res_y - y) / (double)res_y)) - (FOV_Y / 2.0);
 
@@ -64,7 +64,7 @@ point rover::convert_point(int x, int y) {
     return p;
 }
 
-point rover::reverse_point(float x, float y) {
+point rover::point_to_pixel(float x, float y) {
 	float angleY = atan2(y, CAM_HEIGHT);
 	float beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + y * y);
 
@@ -114,7 +114,7 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	
 	getCamData(y, camData);
 
-	mid = reverse_point(prev.x, prev.y).x;
+	mid = point_to_pixel(prev.x, prev.y).x;
 
 	if (mid < 10) mid = 10;
 	if (mid > res_x - 10) mid = res_x - 10;
@@ -123,18 +123,18 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	secEdge = findEdge(camData, mid, res_x - 1);
 
 	if (firstEdge == -1 && secEdge != -1) {
-		p = convert_point(secEdge, y);
+		p = pixel_to_point(secEdge, y);
 		p.x -= 25;
 	}
 	else if (secEdge == -1 && firstEdge != -1) {
-		p = convert_point(firstEdge, y);
+		p = pixel_to_point(firstEdge, y);
 		p.x += 25;
 	}
 	else if (firstEdge == -1 && secEdge == -1) {
-		p = convert_point(res_x / 2, y);
+		p = pixel_to_point(res_x / 2, y);
 	}
 	else {
-		p = convert_point((firstEdge + secEdge) / 2.0, y);
+		p = pixel_to_point((firstEdge + secEdge) / 2.0, y);
 	}
 
 	printf("L: %d, R: %d\n", firstEdge, secEdge);
@@ -244,11 +244,11 @@ void rover::setSpeed(bool spee) {
 	// 	currentSpeed = 0.55;
 	// 	// pixy.setLamp(0, 0);
 	// }
-	// // else if (depth > 70) {
+	// // else if (depth_p > 70) {
 	// // 	currentSpeed = 0.40;
 	// // 	// pixy.setLamp(0, 0);
 	// // }
-	// // else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
+	// // else if (depth_p < 70 && depth_p > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
 	// // 	currentSpeed = 0.30;
 	// // 	pixy.setLamp(1, 1);
 	// // }
@@ -288,18 +288,18 @@ int rover::getDepth(int startHeight) {
 }
 
 int rover::getFinish(){
-	uint8_t data1[depth], data2[depth];
+	uint8_t data1[depth_p], data2[depth_p];
 	uint8_t b, c;
 
-	for (int i = 0; i < depth; i++) {
-		pixy.video.getRGB((res_x / 2) + 20, depth - i - 1, &b, 0);
-		pixy.video.getRGB((res_x / 2) - 20, depth - i - 1, &c, 0);
+	for (int i = 0; i < depth_p; i++) {
+		pixy.video.getRGB((res_x / 2) + 20, depth_p - i - 1, &b, 0);
+		pixy.video.getRGB((res_x / 2) - 20, depth_p - i - 1, &c, 0);
 		data1[i] = b;
 		data2[i] = c;
 	}
 
-	int dist1 = findEdge(data1, 0, depth - 1);
-	int dist2 = findEdge(data2, 0, depth - 1);
+	int dist1 = findEdge(data1, 0, depth_p - 1);
+	int dist2 = findEdge(data2, 0, depth_p - 1);
 
 	if (dist1 == -1 && dist2 == -1) return 0;
 	else if(dist1 == dist2) return 1;
@@ -424,14 +424,14 @@ void rover::printLineDist2() {
 
 	int firstEdge, secEdge;
 	point mid = getMid(midLower, line1, firstEdge, secEdge);
-	int x = (int)reverse_point(mid.x, mid.y).x;
+	int x = (int)point_to_pixel(mid.x, mid.y).x;
 
 	sprintf(buf, "%d,%d,%d,\r\n", x, firstEdge, secEdge);
 	print_string(buf);
 }
 
 void rover::printLineDist3() {
-	getCamData(depth + 10, camData1);
+	getCamData(depth_p + 10, camData1);
 
 	char buf[32];
 
@@ -444,11 +444,11 @@ void rover::printLineDist3() {
     }
 
 	int firstEdge, secEdge;
-	point mid = getMid(midUpper, depth + 10, firstEdge, secEdge);
-	point p = reverse_point(mid.x, mid.y);
+	point mid = getMid(midUpper, depth_p + 10, firstEdge, secEdge);
+	point p = point_to_pixel(mid.x, mid.y);
 	int x = (int)p.x;
 	
-	p = convert_point(res_x / 2, depth);
+	p = pixel_to_point(res_x / 2, depth_p);
 	int dist = (int)p.y;
 
 	sprintf(buf, "%d,%d,%d,%d,\r\n", x, firstEdge, secEdge, dist);
@@ -465,10 +465,10 @@ void rover::printLineDist4() {
         print_string(buf);
     }
 	
-	point p = convert_point(res_x / 2, depth);
+	point p = pixel_to_point(res_x / 2, depth_p);
 	int dist = (int)p.y;
 
-	sprintf(buf, "%d,%d,\r\n", depth, dist);
+	sprintf(buf, "%d,%d,\r\n", depth_p, dist);
 	print_string(buf);
 }
 
@@ -482,29 +482,29 @@ void rover::printCamData() {
 
 	// Lower line
 	mid = getMid(midLower, line1, firstEdge, secEdge);
-	p1 = convert_point(firstEdge, line1);
-	p2 = convert_point(secEdge, line1);
+	p1 = pixel_to_point(firstEdge, line1);
+	p2 = pixel_to_point(secEdge, line1);
 
 	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
 
 	// Dist
-	int depth = getDepth(line1);
+	int depth_p = getDepth(line1);
 
-	if (depth == -1) {
+	if (depth_p == -1) {
 		print_string("-1,-1,-1,-1,-1,-1,\r\n");
 		return;
 	}
 
 	// Upper line
-	mid = getMid(midUpper, depth + 20, firstEdge, secEdge);
-	p1 = convert_point(firstEdge, depth + 20);
-	p2 = convert_point(secEdge, depth + 20);
+	mid = getMid(midUpper, depth_p + 20, firstEdge, secEdge);
+	p1 = pixel_to_point(firstEdge, depth_p + 20);
+	p2 = pixel_to_point(secEdge, depth_p + 20);
 
 	sprintf(buf, "%d,%d,%d,%d,", (int)mid.x, (int)p1.x, (int)p2.x, (int)mid.y);
 	print_string(buf);
 
-	p1 = convert_point(res_x / 2, depth);
+	p1 = pixel_to_point(res_x / 2, depth_p);
 
 	sprintf(buf, "%d,%d,\r\n", (int)p1.x, (int)p1.y);
 	print_string(buf);
