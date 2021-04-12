@@ -116,10 +116,10 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 
 	mid = point_to_pixel(prev.x, prev.y).x;
 
-	if (camData[(int)mid] < 200) {
-		if (camData[0] > 220) mid = 10;
-		else if (camData[res_x - 1] > 220) mid = res_x - 10;
-	}
+	// if (camData[(int)mid] < 150) {
+	// 	if (camData[0] > 200) mid = 10;
+	// 	else if (camData[res_x - 1] > 220) mid = res_x - 10;
+	// }
 
 	if (mid < 10) mid = 10;
 	if (mid > res_x - 10) mid = res_x - 10;
@@ -236,13 +236,14 @@ int rover::findEdgeVer(int x, int start, int stop) {
     return -1;
 }
 
-void rover::setSpeed(bool spee) {
-	if (spee)
+void rover::setSpeed(float dist) {
+	if (dist > 100)
 	{
-		currentSpeed *= SPEED_INCREASE_FACTOR;
+		// currentSpeed *= SPEED_INCREASE_FACTOR;
 
-		if (currentSpeed > MAX_SPEED)
-			currentSpeed = MAX_SPEED;
+		// if (currentSpeed > MAX_SPEED)
+		// 	currentSpeed = MAX_SPEED;
+		currentSpeed = MAX_SPEED;
 	}
 	else
 	{
@@ -267,7 +268,7 @@ void rover::setSpeed(bool spee) {
 	// 	// pixy.setLamp(0, 0);
 	// }
 
-	currentSpeed = 0.43;
+	// currentSpeed = 0.45;
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
@@ -277,24 +278,24 @@ int rover::getDepth(int startHeight) {
 	uint8_t c1, c2, c3;
 
 	for (int i = 0; i < startHeight; i++) {
-		pixy.video.getRGB(res_x / 2 - 10, startHeight - i - 1, &c1, 0);
-		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c2, 0);
-		pixy.video.getRGB(res_x / 2 + 10, startHeight - i - 1, &c3, 0);
+		pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c1, 0);
+		// pixy.video.getRGB(res_x / 2, startHeight - i - 1, &c2, 0);
+		// pixy.video.getRGB(res_x / 2 + 10, startHeight - i - 1, &c3, 0);
 		data1[i] = c1;
-		data2[i] = c2;
-		data3[i] = c3;
+		// data2[i] = c2;
+		// data3[i] = c3;
 	}
 
 	int dist1 = findEdge(data1, 0, startHeight - 1);
-	int dist2 = findEdge(data2, 0, startHeight - 1);
-	int dist3 = findEdge(data3, 0, startHeight - 1);
+	// int dist2 = findEdge(data2, 0, startHeight - 1);
+	// int dist3 = findEdge(data3, 0, startHeight - 1);
 
-	if (dist1 == -1 || dist2 == -1 || dist3 == -1) return -1;
-	int dist = dist1;
-	if (dist2 > dist) dist = dist2;
-	if (dist3 > dist) dist = dist3;
+	// if (dist1 == -1 || dist2 == -1 || dist3 == -1) return -1;
+	// int dist = dist1;
+	// if (dist2 > dist) dist = dist2;
+	// if (dist3 > dist) dist = dist3;
 
-	return startHeight - dist;
+	return startHeight - dist1;
 }
 
 int rover::getFinish(){
