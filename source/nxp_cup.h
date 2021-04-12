@@ -72,11 +72,11 @@ private:
     servoModule *servo;
     engineModule engine;
 
-    bool stopTrackSignal = false;
+    bool stopTrackSignal = false, spee;
     int res_x, res_y, line1, line2, depth_p, frameCounter;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
-    float currentSpeed;
+    float currentSpeed, dist;
 
     void engine_kpod();
 
@@ -85,6 +85,7 @@ private:
     int findEdge(uint8_t camData[], int start, int stop);
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
+    float getAngle(point p);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
     int getFinish();
@@ -135,6 +136,7 @@ public:
     void printLineDist2();
     void printLineDist3();
     void printLineDist4();
+    void printLineDist5();
     void printCamData();
 
     void step(bool motors) {
@@ -148,20 +150,26 @@ public:
             return;
         }
 
-        direction = midLower = getMid(midLower, line1, firstEdge, secEdge);
+        midLower = getMid(midLower, line1);
 
         depth_p = getDepth(res_y - 1);
         p2 = pixel_to_point(res_x / 2, depth_p);
-        float dist = p2.y;
+        dist = p2.y;
+        // if (dist > 150) dist = 150;
+        dist -= 50;
+        depth_p = point_to_pixel(res_x / 2, dist).y;
 
-        if (dist - 50 > direction.y) {
+        // float angleDiff = abs(atan2(midLower.x, midLower.y) - atan2(midUpper.x, midUpper.y));
+        //  && angleDiff < (20 * (M_PI / 180.0))
+
+        if (dist > direction.y) {
             spee = true;
             pixy.setLamp(1, 1);
-            p2 = point_to_pixel(res_x / 2, dist - 50);
-            direction = midUpper = getMid(midUpper, p2.y);
+            direction = midUpper = getMid(midUpper, depth_p);
         }
         else {
             pixy.setLamp(0, 0);
+            direction = midLower;
         }
         
 		setWheels(direction);

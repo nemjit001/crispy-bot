@@ -116,6 +116,11 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 
 	mid = point_to_pixel(prev.x, prev.y).x;
 
+	if (camData[(int)mid] < 200) {
+		if (camData[0] > 220) mid = 10;
+		else if (camData[res_x - 1] > 220) mid = res_x - 10;
+	}
+
 	if (mid < 10) mid = 10;
 	if (mid > res_x - 10) mid = res_x - 10;
 
@@ -137,10 +142,14 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 		p = pixel_to_point((firstEdge + secEdge) / 2.0, y);
 	}
 
-	printf("L: %d, R: %d\n", firstEdge, secEdge);
+	// printf("L: %d, R: %d\n", firstEdge, secEdge);
 
 	// -34, -21
     return p;
+}
+
+float rover::getAngle(point p) {
+	return atan2(p.x, p.y);
 }
 
 int rover::findEdge(uint8_t data[], int start, int stop) {
@@ -171,7 +180,8 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
+	// offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.45) * 4);
+	offset = deg / STEERING_RANGE;
 
 	offset -= 0.14;
 
@@ -472,6 +482,42 @@ void rover::printLineDist4() {
 	print_string(buf);
 }
 
+void rover::printLineDist5() {
+	int firstEdge, secEdge, mid;
+	point p;
+
+	getCamData(line1, camData1);
+	getCamData(depth_p, camData2);
+
+	char buf[32];
+
+	sprintf(buf, "%d,", res_x);
+    print_string(buf);
+
+    for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData1[i]);
+        print_string(buf);
+    }
+
+	p = getMid(midLower, line1, firstEdge, secEdge);
+	mid = (int)point_to_pixel(p.x, p.y).x;
+	sprintf(buf, "%d,%d,%d,", mid, firstEdge, secEdge);
+	print_string(buf);
+
+	for (int i = 0; i < res_x; i++) {
+		sprintf(buf, "%d,", camData2[i]);
+        print_string(buf);
+    }
+
+	p = getMid(midUpper, depth_p, firstEdge, secEdge);
+	mid = (int)point_to_pixel(p.x, p.y).x;
+	sprintf(buf, "%d,%d,%d,", mid, firstEdge, secEdge);
+	print_string(buf);
+
+	sprintf(buf, "%d,%d,\r\n", (int)dist, spee);
+	print_string(buf);
+}
+
 
 void rover::printCamData() {
 	// Print mid, firstEdge en secEdge van beide lijnen, en het verste punt (dist)
@@ -630,7 +676,7 @@ int main(void)
 			break;
 		case _LINE_DIST:
 			car.step(false);
-			car.printLineDist3();
+			car.printLineDist5();
 			break;
 		case _CAM_DATA:
 			car.step(false);
