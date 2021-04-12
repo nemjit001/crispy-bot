@@ -88,6 +88,7 @@ private:
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
+    int getFinish();
 
     void setSpeed(int depth);
     void setWheels(point p);
@@ -146,6 +147,7 @@ public:
         // mid.y -= 15;
 
         depth = getDepth(line1);
+        stopTrackSignal = getFinish();
         p1 = convert_point(res_x / 2, depth);
         float dist = p1.y;
 

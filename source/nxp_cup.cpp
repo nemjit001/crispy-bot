@@ -168,11 +168,7 @@ void rover::setWheels(point p) {
 
 	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
 
-<<<<<<< HEAD
-	offset = (deg / STEERING_RANGE);// * (1 - (speed/4));
-=======
 	offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.44) * 4);
->>>>>>> 4560e576ad68f80f2900f36d08d0199c0580013a
 
 	offset -= 0.14;
 
@@ -241,7 +237,7 @@ void rover::setSpeed(int depth) {
 	// 	currentSpeed = MIN_SPEED;
 	// }
 
-	if (depth > 100 || depth == -1) {
+	if (depth > 150 || depth == -1) {
 		currentSpeed = 0.55;
 		pixy.setLamp(0, 0);
 	}
@@ -249,17 +245,12 @@ void rover::setSpeed(int depth) {
 		currentSpeed = 0.47;
 		pixy.setLamp(0, 0);
 	}
-	else if (depth < 70 && depth > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-		currentSpeed = 0.30;
-		pixy.setLamp(1, 1);
-	}
 	else {
 		currentSpeed = 0.44;
 		pixy.setLamp(0, 0);
 	}
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
-	speed = currentSpeed;
 }
 
 int rover::getDepth(int startHeight) {
@@ -282,6 +273,25 @@ int rover::getDepth(int startHeight) {
 	if (dist == -1) return -1;
 
 	return res_y - dist;
+}
+
+int rover::getFinish(){
+	uint8_t data1[depth], data2[depth];
+	uint8_t b, c;
+
+	for (int i = 0; i < depth; i++) {
+		pixy.video.getRGB((res_x / 2) + 20, depth - i - 1, &b, 0);
+		pixy.video.getRGB((res_x / 2) - 20, depth - i - 1, &c, 0);
+		data1[i] = b;
+		data2[i] = c;
+	}
+
+	int dist1 = findEdge(data1, 0, depth - 1);
+	int dist2 = findEdge(data2, 0, depth - 1);
+
+	if (dist1 == -1 && dist2 == -1) return 0;
+	else if(dist1 == dist2) return 1;
+	else return 0;
 }
 
 void rover::checkTrackSignals()
