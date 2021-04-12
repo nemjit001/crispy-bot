@@ -72,11 +72,11 @@ private:
     servoModule *servo;
     engineModule engine;
 
-    bool stopTrackSignal = false;
+    bool stopTrackSignal = false, spee;
     int res_x, res_y, line1, line2, depth, frameCounter;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
-    float currentSpeed;
+    float currentSpeed, dist;
 
     void engine_kpod();
 
@@ -85,6 +85,7 @@ private:
     int findEdge(uint8_t camData[], int start, int stop);
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
+    float getAngle(point p);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -134,12 +135,13 @@ public:
     void printLineDist2();
     void printLineDist3();
     void printLineDist4();
+    void printLineDist5();
     void printCamData();
 
     void step(bool motors) {
         point mid, p1, p2;
-        bool spee = false;
-        int firstEdge, secEdge;
+        spee = false;
+        // int firstEdge, secEdge;
 
         if (stopTrackSignal)
         {
@@ -147,39 +149,28 @@ public:
             return;
         }
 
-        mid = midLower = getMid(midLower, line1, firstEdge, secEdge);
+        midLower = getMid(midLower, line1);
 
         depth = getDepth(res_y - 1);
         p2 = convert_point(res_x / 2, depth);
-        float dist = p2.y;
+        dist = p2.y;
+        // if (dist > 150) dist = 150;
+        dist -= 50;
+        depth = reverse_point(res_x / 2, dist).y;
 
-        if (firstEdge == -1 || secEdge == -1) {
-            p2 = reverse_point(res_x / 2, dist - 50);
-            p2 = getMid(midUpper, p2.y, firstEdge, secEdge);
-            if (firstEdge != -1 && secEdge != -1) {
-                mid = midUpper = p2;
-                // spee = true;
-                pixy.setLamp(1, 1);
-            }
-        }
+        // float angleDiff = abs(atan2(midLower.x, midLower.y) - atan2(midUpper.x, midUpper.y));
+        //  && angleDiff < (20 * (M_PI / 180.0))
 
         if (dist - 50 > mid.y) {
             spee = true;
             pixy.setLamp(1, 1);
-            p2 = reverse_point(res_x / 2, dist - 50);
-            mid = midUpper = getMid(midUpper, p2.y);
+            mid = midUpper = getMid(midUpper, depth);
         }
         else {
             pixy.setLamp(0, 0);
+            mid = midLower;
         }
 
-        // if (dist < 50) {
-        //     pixy.setLamp(1, 1);
-        // }
-        // else {
-        //     pixy.setLamp(0, 0);
-        // }
-        
 		setWheels(mid);
         if (motors) setSpeed(spee);
         else engine.setSpeed(0, 0);
