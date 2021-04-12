@@ -50,7 +50,7 @@ extern "C"
 #define FOV_X (60 * M_PI / 180.0)
 #define FOV_Y (40 * M_PI / 180.0)
 #define STEERING_RANGE 0.735080959
-#define THRESHOLD 10
+#define THRESHOLD 7
 
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 // #define CAM_ANGLE (64 * M_PI / 180.0)
@@ -85,7 +85,6 @@ private:
     int findEdge(uint8_t camData[], int start, int stop);
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
-    point getDir(point prev);
     int getDepth(int startHeight);
     void getCamData(int y, uint8_t camData[]);
 
@@ -140,6 +139,7 @@ public:
     void step(bool motors) {
         point mid, p1, p2;
         bool spee = false;
+        int firstEdge, secEdge;
 
         if (stopTrackSignal)
         {
@@ -147,11 +147,21 @@ public:
             return;
         }
 
-        mid = midLower = getMid(midLower, line1);
+        mid = midLower = getMid(midLower, line1, firstEdge, secEdge);
 
         depth = getDepth(res_y - 1);
         p2 = convert_point(res_x / 2, depth);
         float dist = p2.y;
+
+        if (firstEdge == -1 || secEdge == -1) {
+            p2 = reverse_point(res_x / 2, dist - 50);
+            p2 = getMid(midUpper, p2.y, firstEdge, secEdge);
+            if (firstEdge != -1 && secEdge != -1) {
+                mid = midUpper = p2;
+                // spee = true;
+                pixy.setLamp(1, 1);
+            }
+        }
 
         if (dist - 50 > mid.y) {
             spee = true;
@@ -160,7 +170,6 @@ public:
             mid = midUpper = getMid(midUpper, p2.y);
         }
         else {
-            // frameCounter = 0;
             pixy.setLamp(0, 0);
         }
 

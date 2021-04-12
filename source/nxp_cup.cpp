@@ -137,6 +137,9 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 		p = convert_point((firstEdge + secEdge) / 2.0, y);
 	}
 
+	printf("L: %d, R: %d\n", firstEdge, secEdge);
+
+	// -34, -21
     return p;
 }
 
@@ -253,6 +256,8 @@ void rover::setSpeed(bool spee) {
 	// 	currentSpeed = 0.43;
 	// 	// pixy.setLamp(0, 0);
 	// }
+
+	currentSpeed = 0.43;
 
 	engine.setSpeed(-currentSpeed, -currentSpeed);
 }
@@ -606,7 +611,7 @@ int main(void)
 			break;
 		case _LINE_DIST:
 			car.step(false);
-			car.printLineDist4();
+			car.printLineDist3();
 			break;
 		case _CAM_DATA:
 			car.step(false);
