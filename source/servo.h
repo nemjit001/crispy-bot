@@ -6,6 +6,12 @@ extern "C"
 #include "Modules/mTimer.h"
 }
 
+#include "Utils/util.h"
+
+#define SERVO_RANGE 0.7
+#define SERVO_CENTER -0.14
+#define STEERING_RANGE TO_RADIANS(84)
+
 typedef enum
 {
     servoPort1,
@@ -26,6 +32,7 @@ public:
     }
 
     void setRotation(float in);
+    void setServo(float angle);
     float getRotation(void);
 };
 

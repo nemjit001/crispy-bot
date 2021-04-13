@@ -1,4 +1,4 @@
-#include "servo_module.h"
+#include "servo.h"
 
 void servoModule::setRotation(float in)
 {
@@ -22,4 +22,14 @@ void servoModule::setRotation(float in)
 float servoModule::getRotation()
 {
     return this->duty;
+}
+
+void servoModule::setServo(float angle) {
+    float offset = angle / STEERING_RANGE * SERVO_RANGE;
+
+    offset += SERVO_CENTER;
+    if (offset > SERVO_CENTER + STEERING_RANGE) offset = SERVO_CENTER + STEERING_RANGE;
+    else if (offset < SERVO_CENTER - STEERING_RANGE) offset = SERVO_CENTER - STEERING_RANGE;
+
+    setRotation(offset);
 }

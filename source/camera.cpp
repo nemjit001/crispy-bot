@@ -1,0 +1,122 @@
+#include "camera.h"
+
+point Camera::pixel_to_point(int x, int y) {
+    double angleX = FOV_X * (x / (double)res_x) - (FOV_X / 2.0);
+    double angleY = CAM_ANGLE + (FOV_Y * ((res_y - y) / (double)res_y)) - (FOV_Y / 2.0);
+
+    double pointY = CAM_HEIGHT * tan(angleY);
+    
+    double beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + pointY * pointY);
+    
+    double pointX = beamLength * tan(angleX);
+
+    point p;
+    p.x = pointX;
+    p.y = pointY;
+
+    return p;
+}
+
+point Camera::point_to_pixel(float x, float y) {
+	float angleY = atan2(y, CAM_HEIGHT);
+	float beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + y * y);
+
+	int pixY = res_y - round(((angleY - CAM_ANGLE + FOV_Y / 2.0) / (float)FOV_Y) * res_y);
+	
+	float angleX = atan2(x, beamLength);
+	
+	int pixX = round(((angleX + FOV_X / 2.0) / (float)FOV_X) * res_x);
+
+	point p;
+
+	p.x = pixX;
+	p.y = pixY;
+	
+	return p;
+}
+
+int Camera::findEdgeHor(int y, int start, int stop) {
+    int diff = 0, i = start;
+    int sign = (start < stop) ? 1 : -1;
+	uint8_t c1, c2;
+
+	pixy.video.getRGB(i, y, &c1, 0);
+
+    while (i * sign < stop) {
+		pixy.video.getRGB(i + sign * 2, y, &c2, 0);
+
+        diff =  c1 - c2;
+        if (diff >= THRESHOLD) {
+            return i;
+        }
+
+		c1 = c2;
+        i += sign * 2;
+    }
+
+    return -1;
+}
+
+int Camera::findEdgeVer(int x, int start, int stop) {
+	int diff = 0, i = start;
+	uint8_t c1, c2;
+    int sign = (start < stop) ? 1 : -1;
+
+	pixy.video.getRGB(x, i, &c1, 0);
+
+    while (i != stop) {
+		pixy.video.getRGB(x, i + sign, &c2, 0);
+
+        diff = c1 - c2;
+        if (diff >= THRESHOLD) {
+            return i;
+        }
+		
+		c1 = c2;
+        i += sign;
+    }
+
+    return -1;
+}
+
+point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
+	point p;
+	float mid;
+
+	mid = point_to_pixel(prev.x, prev.y).x;
+
+	if (mid < 10) mid = 10;
+	if (mid > res_x - 10) mid = res_x - 10;
+
+	firstEdge = findEdgeHor(y, mid, 0);
+	secEdge = findEdgeHor(y, mid, res_x - 1);
+
+	if (firstEdge == -1 && secEdge != -1) {
+		p = pixel_to_point(secEdge, y);
+		p.x -= 25;
+	}
+	else if (secEdge == -1 && firstEdge != -1) {
+		p = pixel_to_point(firstEdge, y);
+		p.x += 25;
+	}
+	else if (firstEdge == -1 && secEdge == -1) {
+		p = pixel_to_point(res_x / 2, y);
+	}
+	else {
+		p = pixel_to_point((firstEdge + secEdge) / 2.0, y);
+	}
+
+    return p;
+}
+
+point Camera::getMid(point prev, int y) {
+	int firstEdge, secEdge;
+
+    return getMid(prev, y, firstEdge, secEdge);
+}
+
+float Camera::getDepth(int offset) {
+    int y = findEdgeVer(offset, res_y - 1, 0);
+
+	return pixel_to_point(res_x / 2 + offset, y).y;
+}

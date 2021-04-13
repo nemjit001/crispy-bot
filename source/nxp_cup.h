@@ -47,20 +47,17 @@ extern "C"
 #define LINE_DIST 80.0      // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
 
-#define FOV_X (68 * M_PI / 180.0)
-#define FOV_Y (45 * M_PI / 180.0)
-#define STEERING_RANGE 0.735080959
+#define FOV_X TO_RADIANS(68)
+#define FOV_Y TO_RADIANS(45)
+#define STEERING_RANGE TO_RADIANS(84)
 #define THRESHOLD 7
 #define SERVO_RANGE 0.7
 #define SERVO_CENTER -0.14
 
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
-// #define CAM_ANGLE (64 * M_PI / 180.0)
 
 #define MAX_SPEED 0.60
 #define MIN_SPEED 0.47
-#define SPEED_INCREASE_FACTOR 1.035
-#define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
 typedef struct {
     double x;
