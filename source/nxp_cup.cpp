@@ -111,8 +111,6 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	point p;
 	float mid;
 	uint8_t camData[res_x];
-	
-	getCamData(y, camData);
 
 	mid = point_to_pixel(prev.x, prev.y).x;
 
@@ -124,8 +122,8 @@ point rover::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	if (mid < 10) mid = 10;
 	if (mid > res_x - 10) mid = res_x - 10;
 
-	firstEdge = findEdge(camData, mid, 0);
-	secEdge = findEdge(camData, mid, res_x - 1);
+	firstEdge = findEdgeHor(y, mid, 0);
+	secEdge = findEdgeHor(y, mid, res_x - 1);
 
 	if (firstEdge == -1 && secEdge != -1) {
 		p = pixel_to_point(secEdge, y);
@@ -175,40 +173,35 @@ point rover::getMid(point prev, int y) {
 
 void rover::setWheels(point p) {
 	float deg, offset;
+    float range = 0.7, adjustment = -0.14;
 
     deg = atan2(p.x, p.y);
 
-	// offset = quadraticCurve(deg / STEERING_RANGE, 3, 2);
+    offset = deg / STEERING_RANGE * range;
 
-	// offset = deg / STEERING_RANGE * (1 - (currentSpeed - 0.45) * 4);
-	offset = deg / STEERING_RANGE;
+    offset += adjustment;
+    if (offset > adjustment + range) offset = adjustment + range;
+    else if (offset < adjustment - range) offset = adjustment - range;
 
-	offset -= 0.14;
-
-    if (offset > 1) offset = 1;
-    else if (offset < -1) offset = -1;
-    
     servo->setRotation(offset);
 }
 
 int rover::findEdgeHor(int y, int start, int stop) {
     int diff = 0, i = start;
-	uint8_t c1, c2;
     int sign = (start < stop) ? 1 : -1;
+	uint8_t c1, c2;
 
 	pixy.video.getRGB(i, y, &c1, 0);
 
     while (i != stop) {
-		pixy.video.getRGB(i + sign, y, &c2, 0);
+		pixy.video.getRGB(i + 1, y, &c2, 0);
 
-        diff = c1 - c2;
-
+        diff = sign * (c1 - c2);
         if (diff >= THRESHOLD) {
             return i;
         }
-
-        i += sign;
 		c1 = c2;
+        i += sign;
     }
 
     return -1;
@@ -224,53 +217,38 @@ int rover::findEdgeVer(int x, int start, int stop) {
     while (i != stop) {
 		pixy.video.getRGB(x, i + sign, &c2, 0);
 
-        diff = c1 - c2;
+        diff = sign * (c1 - c2);
         if (diff >= THRESHOLD) {
             return i;
         }
 		
-        i += sign;
 		c1 = c2;
+        i += sign;
     }
 
     return -1;
 }
 
 void rover::setSpeed(float dist) {
-	if (dist > 100)
-	{
-		// currentSpeed *= SPEED_INCREASE_FACTOR;
+	float speed1, speed2;
 
-		// if (currentSpeed > MAX_SPEED)
-		// 	currentSpeed = MAX_SPEED;
+	if (dist > 100){
 		currentSpeed = MAX_SPEED;
+		speed1 = currentSpeed;
+		speed2 = currentSpeed;
+	}else if(braking){
+		speed1 = speed2 = 0.2;
 	}
-	else
-	{
-		// TODO: lineare decrease hier?
+	else{
 		currentSpeed = MIN_SPEED;
+		speed1 = currentSpeed;
+		speed2 = currentSpeed;
+
+		if(offset < -0.70){speed2 += 0.00; speed1 -=0.15;}
+		else if(offset > 0.70) {speed1 += 0.00; speed2 -= 0.15;}
 	}
 
-	// if (spee) {
-	// 	currentSpeed = 0.55;
-	// 	// pixy.setLamp(0, 0);
-	// }
-	// // else if (depth_p > 70) {
-	// // 	currentSpeed = 0.40;
-	// // 	// pixy.setLamp(0, 0);
-	// // }
-	// // else if (depth_p < 70 && depth_p > 50 && (currentSpeed == 0.30 || currentSpeed > 0.44)) {
-	// // 	currentSpeed = 0.30;
-	// // 	pixy.setLamp(1, 1);
-	// // }
-	// else {
-	// 	currentSpeed = 0.43;
-	// 	// pixy.setLamp(0, 0);
-	// }
-
-	// currentSpeed = 0.45;
-
-	engine.setSpeed(-currentSpeed, -currentSpeed);
+	engine.setSpeed(-speed1, -speed2);
 }
 
 int rover::getDepth(int startHeight) {

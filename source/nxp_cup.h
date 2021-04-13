@@ -55,8 +55,8 @@ extern "C"
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 // #define CAM_ANGLE (64 * M_PI / 180.0)
 
-#define MAX_SPEED 0.55
-#define MIN_SPEED 0.43
+#define MAX_SPEED 0.60
+#define MIN_SPEED 0.45
 #define SPEED_INCREASE_FACTOR 1.035
 #define SPEED_DECREASE_FACTOR (1.0f / SPEED_INCREASE_FACTOR)
 
@@ -72,11 +72,11 @@ private:
     servoModule *servo;
     engineModule engine;
 
-    bool stopTrackSignal = false, spee;
+    bool stopTrackSignal = false, spee, braking;
     int res_x, res_y, line1, line2, depth_p, frameCounter;
     point midLower, midUpper;
     uint8_t *camData1, *camData2;
-    float currentSpeed, dist;
+    float currentSpeed, dist, offset;
 
     void engine_kpod();
 
@@ -119,6 +119,8 @@ public:
         frameCounter = 0;
         currentSpeed = MIN_SPEED;
 
+        braking = false;
+
         camData1 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
         camData2 = (uint8_t*)malloc(res_x * sizeof(uint8_t));
     }
@@ -141,13 +143,16 @@ public:
 
     void step(bool motors) {
         point direction, p1, p2;
-        spee = false;
         int firstEdge, secEdge;
 
-        if (stopTrackSignal)
-        {
-            stop();
-            return;
+        if (braking && frameCounter == 2){
+            braking = false;
+            frameCounter = -20;
+        }else if (braking && frameCounter < 2){
+            frameCounter++;
+        }
+        else if(frameCounter < -1){
+            frameCounter++;
         }
 
         midLower = getMid(midLower, line1);
@@ -168,8 +173,13 @@ public:
             pixy.setLamp(1, 1);
             direction = midUpper = getMid({0, 100}, depth_p);
         }
+        else if(!braking && dist < 100 && frameCounter == -1){
+            frameCounter = 0;
+            braking =  true;
+        }
         else {
             pixy.setLamp(0, 0);
+            spee = false;
             direction = midLower;
         }
         
