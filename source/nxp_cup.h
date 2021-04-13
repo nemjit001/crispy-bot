@@ -35,29 +35,9 @@ extern "C"
 #include "arm_math.h"
 }
 
-/* Pixy 2 */
-#include "Pixy/Pixy2SPI_SS.h"
-//#include "Pixy/Pixy2line.h"
+#include "rover.h"
 
-/* Own modules */
-#include "servo_module.h"
-#include "engine_module.h"
-
-#define CAM_HEIGHT 39.5     // In cm, lens tot grond
-#define LINE_DIST 80.0      // In cm, wiel tot lijn
-#define LENS_WHEELS_DIST 9.0  // In cm, lens tot wiel, horizontaal
-
-#define FOV_X TO_RADIANS(68)
-#define FOV_Y TO_RADIANS(45)
-#define STEERING_RANGE TO_RADIANS(84)
-#define THRESHOLD 7
-#define SERVO_RANGE 0.7
-#define SERVO_CENTER -0.14
-
-#define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
-
-#define MAX_SPEED 0.60
-#define MIN_SPEED 0.47
+#define K_MAIN_INTERVAL (100 / kPit1Period)
 
 typedef struct {
     double x;

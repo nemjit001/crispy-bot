@@ -40,8 +40,6 @@ extern "C"
 #include "motor.h"
 #include "servo.h"
 
-#define K_MAIN_INTERVAL (100 / kPit1Period)
-
 #define MAX_SPEED 0.60
 #define MIN_SPEED 0.47
 
