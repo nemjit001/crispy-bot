@@ -29,6 +29,11 @@ point Camera::point_to_pixel(float x, float y) {
 uint8_t Camera::getGrayScale(int x, int y){
 	uint8_t grayscale;
 
+	if(x < 0) x = 0;
+	else if(y < 0) y = 0;
+	else if(x > res_x - 1) x = res_x -1;
+	else if (y > res_y - 1) y = res_y - 1;
+
 	pixy.video.getRGB(x, y, &grayscale, 0);
 
 	return grayscale;
