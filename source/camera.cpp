@@ -26,15 +26,10 @@ point Camera::point_to_pixel(float x, float y) {
 	return {pixX, pixY};
 }
 
-uint8_t Camera::getGrayScale(int x, int y){
+uint8_t Camera::getGrayScale(int x, int y) {
 	uint8_t grayscale;
 
-	if(x < 0) x = 0;
-	else if(y < 0) y = 0;
-	else if(x > res_x - 1) x = res_x -1;
-	else if (y > res_y - 1) y = res_y - 1;
-
-	grayscale = getGrayScale(x, y);
+	pixy.video.getRGB(x, y, &grayscale, false);
 
 	return grayscale;
 }
@@ -57,10 +52,10 @@ int Camera::findEdgeHor(int y, int start, int stop) {
     int sign = (start < stop) ? 1 : -1;
 	uint8_t c1, c2;
 
-	c1 = getGrayScale(i, y);
+	pixy.video.getRGB(i, y, &c1, false);
 
     while (i * sign < stop) {
-		c2 = getGrayScale(i + sign, y);
+		pixy.video.getRGB(i + sign, y, &c2, false);
 
         diff = c1 - c2;
         if (diff >= THRESHOLD) {
@@ -79,10 +74,10 @@ int Camera::findEdgeVer(int x, int start, int stop) {
 	uint8_t c1, c2;
     int sign = (start < stop) ? 1 : -1;
 
-	c1 = getGrayScale(res_x / 2 + x, i);
+	pixy.video.getRGB(res_x / 2 + x, i, &c1, false);
 
-    while (i * sign < stop) {
-		c2 = getGrayScale(res_x / 2 + x, i + sign);
+    while (i != stop) {
+		pixy.video.getRGB(res_x / 2 + x, i + sign, &c2, false);
 
         diff = c1 - c2;
         if (diff >= THRESHOLD) {
@@ -107,8 +102,6 @@ point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 
 	firstEdge = findEdgeHor(y, mid, 0);
 	secEdge = findEdgeHor(y, mid, res_x - 1);
-
-	// printf("%d, %d\n", firstEdge, secEdge);
 
 	if (firstEdge == -1 && secEdge != -1) {
 		p = pixel_to_point(secEdge, y);
@@ -144,7 +137,7 @@ void Camera::getRow(int y, uint8_t camData[]) {
 	uint8_t c;
 
 	for (int x = 0; x < res_x; x++) {
-		c = getGrayScale(x, y);
+		pixy.video.getRGB(x, y, &c, false);
 		camData[x] = c;
 	}
 }
@@ -153,7 +146,7 @@ void Camera::getCol(int x, uint8_t camData[]) {
 	uint8_t c;
 
 	for (int y = 0; y < res_y; y++) {
-		c = getGrayScale(x, y);
+		pixy.video.getRGB(x, y, &c, false);
 		camData[y] = c;
 	}
 }

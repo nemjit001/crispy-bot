@@ -35,8 +35,8 @@ extern "C"
 #include "engine_module.h"
 #include "servo_module.h"
 
-#define MAX_SPEED 0.45
-#define MIN_SPEED 0.45
+#define MAX_SPEED 0.43
+#define MIN_SPEED 0.43
 
 class Rover
 {
