@@ -56,6 +56,7 @@ private:
     void setWheels();
     void printDepth();
     void printBoth();
+    void printMidLine();
 
 public:
     Rover() {
@@ -69,7 +70,7 @@ public:
 
     void step(bool motors) {
 		setWheels();
-        if (mSwitch_ReadSwitch(kSw3)) printDepth();
+        if (mSwitch_ReadSwitch(kSw3)) printBoth();
         
         if (mSwitch_ReadSwitch(kSw2)) setBrakes();
         if (mSwitch_ReadSwitch(kSw1)) setSpeed();

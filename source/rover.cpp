@@ -57,11 +57,11 @@ void Rover::setWheels() {
     midLower = camera.getMid(midLower, lowerLine, lowerLeft, lowerRight);
 
     depth = camera.getDepth(0);
-	upperLine = depth - 60;
+	upperLine = camera.point_to_pixel(0, depth - 60).y;
 
 	midUpper = camera.getMid({0, 100}, upperLine, upperLeft, upperRight);
 
-    if (upperLine > lowerLine) {
+    if (upperLine < lowerLine) {
         spee = true;
         direction = midUpper;
     }
@@ -160,11 +160,26 @@ void Rover::printDepth() {
 	print_string(str);
 }
 
+void Rover::printMidLine() {
+	uint8_t camData[camera.res_x];
+	char str[16];
+
+	camera.getRow(camera.res_y / 2, camData);
+
+	for (int i = 0; i < camera.res_x; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	print_string("\r\n");
+}
+
 void Rover::printBoth() {
 	uint8_t camData[camera.res_x];
 	char str[32];
 	int mid;
 
+	// Lower
 	camera.getRow(lowerLine, camData);
 
 	for (int i = 0; i < camera.res_x; i++) {
@@ -172,9 +187,23 @@ void Rover::printBoth() {
 		print_string(str);
 	}
 
-	mid = (int)
+	mid = (int)camera.point_to_pixel(midLower).x;
 
-	sprintf("%d,%d,%d,", (int))
+	sprintf(str, "%d,%d,%d,", mid, lowerLeft, lowerRight);
+	print_string(str);
+
+	// Upper
+	camera.getRow(upperLine, camData);
+
+	for (int i = 0; i < camera.res_x; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	mid = (int)camera.point_to_pixel(midUpper).x;
+
+	sprintf(str, "%d,%d,%d,%d,%d,\r\n", mid, upperLeft, upperRight, (int)depth, spee);
+	print_string(str);
 }
 
 uint8_t get_switch_state()
