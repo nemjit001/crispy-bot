@@ -130,7 +130,7 @@ point Camera::getMid(point prev, int y) {
 }
 
 float Camera::getDepth(int offset) {
-    int y = findEdgeVer(offset, res_y - 10, 0);
+    int y = findEdgeVer(offset, res_y, 0);
 
 	return pixel_to_point(res_x / 2 + offset, y).y;
 }
