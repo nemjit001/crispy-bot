@@ -35,11 +35,7 @@ extern "C"
 #include "engine_module.h"
 #include "servo_module.h"
 
-<<<<<<< HEAD
-#define MAX_SPEED 0.5
-=======
 #define MAX_SPEED 0.50
->>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
 #define MIN_SPEED 0.43
 
 class Rover
@@ -58,12 +54,9 @@ private:
     void setBrakes();
     void setSpeed();
     void setWheels();
-<<<<<<< HEAD
     void checkFinish();
-=======
     void printDepth();
     void printBoth();
->>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
 
 public:
     Rover() {
@@ -79,17 +72,9 @@ public:
 		setWheels();
         if (mSwitch_ReadSwitch(kSw3)) printDepth();
         
-<<<<<<< HEAD
-        if (motors) {
-            //setBrakes();
-            checkFinish();
-            setSpeed();
-        }
-=======
         if (mSwitch_ReadSwitch(kSw2)) setBrakes();
         if (mSwitch_ReadSwitch(kSw1)) setSpeed();
 
->>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
         else {
             engine.setSpeed(0, 0);
         }
