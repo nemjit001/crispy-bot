@@ -26,6 +26,19 @@ point Camera::point_to_pixel(float x, float y) {
 	return {pixX, pixY};
 }
 
+uint8_t Camera::getGrayScale(int x, int y){
+	uint8_t grayscale;
+
+	pixy.video.getRGB(x, y, &grayscale, 0);
+
+	return grayscale;
+}
+
+void Camera::setLamp(bool on){
+	if(on)pixy.setLamp(1, 1);
+	else pixy.setLamp(0,0);
+}
+
 point Camera::pixel_to_point(point p) {
 	return pixel_to_point(p.x, p.y);
 }

@@ -54,6 +54,7 @@ private:
     void setBrakes();
     void setSpeed();
     void setWheels();
+    void checkFinish();
     void printDepth();
     void printBoth();
     void printMidLine();
