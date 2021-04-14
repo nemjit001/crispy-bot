@@ -24,8 +24,6 @@ public:
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
     float getDepth(int x);
-    int findEdgeHor(int y, int start, int stop);
-    int findEdgeVer(int x, int start, int stop);
     point pixel_to_point(int x, int y);
     point point_to_pixel(float x, float y);
     uint8_t getGrayScale(int x, int y);
@@ -34,8 +32,6 @@ public:
     point point_to_pixel(point p);
     void getRow(int y, uint8_t camData[]);
     void getCol(int x, uint8_t camData[]);
-
-    int res_x, res_y;
 
     Camera() {
         pixy.init();

@@ -125,8 +125,7 @@ void Rover::engine_kpod()
 }
 
 void Rover::checkFinish(){
-	int beamLeft =  camera.res_x - 20, beamRight = camera.res_x + 20;
-	int finishLeft = camera.findEdgeVer(beamLeft, camera.res_y - 10, camera.res_y / 2), finishRight = camera.findEdgeVer(beamRight, camera.res_y - 10, camera.res_y / 2);
+	int finishLeft = camera.findEdgeVer(-20, camera.res_y - 10, camera.res_y / 2), finishRight = camera.findEdgeVer(20, camera.res_y - 10, camera.res_y / 2);
 	int pointBefore, pointAfter; 
 
 
@@ -146,11 +145,12 @@ void Rover::checkFinish(){
 			camera.setLamp(true);
 		}
 	}*/
+	
 	if(finishLeft != -1 && finishRight != -1){
-		pointBefore = camera.getGrayScale(camera.res_x, finishLeft - 10);
-		pointAfter = camera.getGrayScale(camera.res_x, finishLeft + 10);
+		pointBefore = camera.getGrayScale(camera.res_x, finishLeft - 20);
+		pointAfter = camera.getGrayScale(camera.res_x, finishLeft + 20);
 
-		if((pointBefore - pointAfter) < 10 && pointBefore - pointAfter > -10){
+		if(pointBefore - pointAfter < 10 && pointBefore - pointAfter > -10){
 			camera.setLamp(true);
 		}
 	}
