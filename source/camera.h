@@ -18,13 +18,17 @@ private:
     int findEdgeVer(int x, int start, int stop);
 
     Pixy2SPI_SS pixy;
-    int res_x, res_y;
 public:
+    int res_x, res_y;
+    
+
     point getMid(point prev, int y);
     point getMid(point prev, int y, int &firstEdge, int &secEdge);
     float getDepth(int x);
     point pixel_to_point(int x, int y);
     point point_to_pixel(float x, float y);
+    int getGrayScale(int x, int y);
+    void setLamp(bool on);
 
     Camera() {
         pixy.init();

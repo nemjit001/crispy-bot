@@ -26,6 +26,19 @@ point Camera::point_to_pixel(float x, float y) {
 	return {pixX, pixY};
 }
 
+int Camera::getGrayScale(int x, int y){
+	int grayscale;
+
+	pixy.video.getRGB(x, y, &grayscale, 0);
+
+	return grayscale;
+}
+
+void Camera::setLamp(bool on){
+	if(on)pixy.setLamp(1, 1);
+	else pixy.setLamp(0,0);
+}
+
 int Camera::findEdgeHor(int y, int start, int stop) {
     int diff = 0, i = start;
     int sign = (start < stop) ? 1 : -1;

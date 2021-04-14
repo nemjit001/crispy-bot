@@ -123,6 +123,34 @@ void Rover::engine_kpod()
 	engine.setSpeed(mAd_Read(kPot1), mAd_Read(kPot1));
 }
 
+void Rover::checkFinish(){
+	int beamLeft =  camera.res_x - 20, beamRight = camera.res_x + 20;
+	int finishLeft = camera.findEdgeVer(beamLeft, camera.res_y - 10, camera.res_y / 2), finishRight = findEdgeVer(beamRight, camera.res_y - 10, camera.res_y / 2);
+	int pointBefore, pointAfter; 
+	uint8_t c1, c2;
+
+	if(finishLeft != -1){
+		pointBefore = camera.getGrayScale(beamLeft, finishLeft - 10);
+		pointAfter = camera.getGrayScale(beamLeft, finishLeft + 10);
+
+		if((c1 - c2) < 10){
+			camera.setLamp(true);
+		}
+	}
+	else if(finishRight != -1) {
+		pointBefore = camera.getGrayScale(beamRight, finishLeft - 10);
+		pointAfter = camera.getGrayScale(beamRight, finishLeft + 10);
+
+		if((c1 - c2) < 10){
+			camera.setLamp(true);
+		}
+	}
+	else {
+		camera.setLamp(false);
+	}
+	return;
+}
+
 void display_battery_level()
 {
 	float voltage = mAd_Read(kUBatt);

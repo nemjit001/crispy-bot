@@ -54,6 +54,7 @@ private:
     void setBrakes();
     void setSpeed();
     void setWheels();
+    void checkFinish();
 
 public:
     Rover() {
@@ -73,7 +74,8 @@ public:
 		setWheels();
         
         if (motors) {
-            setBrakes();
+            //setBrakes();
+            checkFinish();
             setSpeed();
         }
         else {
