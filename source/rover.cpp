@@ -125,15 +125,15 @@ void Rover::engine_kpod()
 
 void Rover::checkFinish(){
 	int beamLeft =  camera.res_x - 20, beamRight = camera.res_x + 20;
-	int finishLeft = camera.findEdgeVer(beamLeft, camera.res_y - 10, camera.res_y / 2), finishRight = findEdgeVer(beamRight, camera.res_y - 10, camera.res_y / 2);
+	int finishLeft = camera.findEdgeVer(beamLeft, camera.res_y - 10, camera.res_y / 2), finishRight = camera.findEdgeVer(beamRight, camera.res_y - 10, camera.res_y / 2);
 	int pointBefore, pointAfter; 
-	uint8_t c1, c2;
 
-	if(finishLeft != -1){
+
+	/*if(finishLeft != -1){
 		pointBefore = camera.getGrayScale(beamLeft, finishLeft - 10);
 		pointAfter = camera.getGrayScale(beamLeft, finishLeft + 10);
 
-		if((c1 - c2) < 10){
+		if((pointBefore - pointAfter) < 10 && pointBefore - pointAfter > -10){
 			camera.setLamp(true);
 		}
 	}
@@ -141,7 +141,15 @@ void Rover::checkFinish(){
 		pointBefore = camera.getGrayScale(beamRight, finishLeft - 10);
 		pointAfter = camera.getGrayScale(beamRight, finishLeft + 10);
 
-		if((c1 - c2) < 10){
+		if((pointBefore - pointAfter) < 10 && pointBefore - pointAfter > -10){
+			camera.setLamp(true);
+		}
+	}*/
+	if(finishLeft != -1 && finishRight != -1){
+		pointBefore = camera.getGrayScale(camera.res_x, finishLeft - 10);
+		pointAfter = camera.getGrayScale(camera.res_x, finishLeft + 10);
+
+		if((pointBefore - pointAfter) < 10 && pointBefore - pointAfter > -10){
 			camera.setLamp(true);
 		}
 	}
