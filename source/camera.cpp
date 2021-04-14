@@ -10,11 +10,7 @@ point Camera::pixel_to_point(int x, int y) {
     
     double pointX = beamLength * tan(angleX);
 
-    point p;
-    p.x = pointX;
-    p.y = pointY;
-
-    return p;
+    return {pointX, pointY};
 }
 
 point Camera::point_to_pixel(float x, float y) {
@@ -22,17 +18,12 @@ point Camera::point_to_pixel(float x, float y) {
 	float beamLength = sqrt(CAM_HEIGHT * CAM_HEIGHT + y * y);
 
 	int pixY = res_y - round(((angleY - CAM_ANGLE + FOV_Y / 2.0) / (float)FOV_Y) * res_y);
-	
+
 	float angleX = atan2(x, beamLength);
 	
 	int pixX = round(((angleX + FOV_X / 2.0) / (float)FOV_X) * res_x);
 
-	point p;
-
-	p.x = pixX;
-	p.y = pixY;
-	
-	return p;
+	return {pixX, pixY};
 }
 
 int Camera::findEdgeHor(int y, int start, int stop) {
@@ -43,15 +34,15 @@ int Camera::findEdgeHor(int y, int start, int stop) {
 	pixy.video.getRGB(i, y, &c1, 0);
 
     while (i * sign < stop) {
-		pixy.video.getRGB(i + sign * 2, y, &c2, 0);
+		pixy.video.getRGB(i + sign, y, &c2, 0);
 
-        diff =  c1 - c2;
+        diff = c1 - c2;
         if (diff >= THRESHOLD) {
             return i;
         }
 
 		c1 = c2;
-        i += sign * 2;
+        i += sign;
     }
 
     return -1;
@@ -90,6 +81,8 @@ point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 
 	firstEdge = findEdgeHor(y, mid, 0);
 	secEdge = findEdgeHor(y, mid, res_x - 1);
+
+	// printf("%d, %d\n", firstEdge, secEdge);
 
 	if (firstEdge == -1 && secEdge != -1) {
 		p = pixel_to_point(secEdge, y);

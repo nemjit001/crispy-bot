@@ -58,7 +58,7 @@ void Rover::setWheels() {
 
     depth = camera.getDepth(0);
 
-    if (depth - 60 > midLower.y) {
+    if (depth - 60 > midLower.y && false) {
         spee = true;
         direction = midUpper = camera.getMid({0, 100}, depth - 60);
         // pixy.setLamp(1, 1);

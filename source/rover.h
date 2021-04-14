@@ -62,7 +62,9 @@ public:
 
         midLower = midUpper = {0, 100};
 
-        bottomLine = camera.point_to_pixel(0, 50).y;
+        point p = camera.point_to_pixel(0, 50);
+        bottomLine = p.y;
+        point p2 = camera.pixel_to_point(p.x, p.y);
 
         frameCounter = 0;
     }

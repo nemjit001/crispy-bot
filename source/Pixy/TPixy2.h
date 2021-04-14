@@ -82,8 +82,9 @@
 #include "Pixy2Line.h"
 #include "Pixy2Video.h"
 
-extern "C" {
 #include "Modules/mDelay.h"
+
+extern "C" {
 #include "Interfaces/iSpi.h"
 #include "Interfaces/iDio.h"
 #include "Modules/mSpi.h"
@@ -192,7 +193,7 @@ int8_t TPixy2<LinkType>::init(uint32_t arg)
       getResolution(); // get resolution so we have it
       return PIXY_RESULT_OK;
     }
-    usleep(5000); // delay for sync
+    // usleep(5000); // delay for sync
   }
   // timeout
   return PIXY_RESULT_TIMEOUT;
@@ -239,7 +240,7 @@ int16_t TPixy2<LinkType>::getSync()
 #endif
         return PIXY_RESULT_ERROR;
       }
-      usleep(25);
+      // usleep(25);
 
       j++;
       i = 0;
@@ -331,7 +332,7 @@ int8_t TPixy2<LinkType>::changeProg(const char *prog)
     }
     else
       return PIXY_RESULT_ERROR; // some kind of bitstream error
-    usleep(1000);
+    // usleep(1000);
   }
 }
 

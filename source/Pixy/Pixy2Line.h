@@ -40,7 +40,7 @@
 #define _PIXY2LINE_H
 
 #include "Modules/mDelay.h"
-#include "Utils/util.h"
+// #include "Utils/util.h"
 
 #define LINE_REQUEST_GET_FEATURES 0x30
 #define LINE_RESPONSE_GET_FEATURES 0x31
@@ -72,9 +72,9 @@ struct Vector
 {
   void print()
   {
-    char buf[64];
-    sprintf(buf, "vector: (%d %d) (%d %d) index: %d flags %d\r\n", m_x0, m_y0, m_x1, m_y1, m_index, m_flags);
-    print_string(buf);
+    // char buf[64];
+    // sprintf(buf, "vector: (%d %d) (%d %d) index: %d flags %d\r\n", m_x0, m_y0, m_x1, m_y1, m_index, m_flags);
+    // print_string(buf);
   }
 
   uint8_t m_x0;
