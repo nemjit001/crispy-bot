@@ -68,7 +68,7 @@ void Rover::setWheels() {
     else {
         spee = false;
         direction = midLower;
-        direction.y -= 10;
+        direction.y -= 15;
     }
 
     angle = atan2(direction.x, direction.y);
@@ -203,6 +203,30 @@ void Rover::printBoth() {
 	mid = (int)camera.point_to_pixel(midUpper).x;
 
 	sprintf(str, "%d,%d,%d,%d,%d,\r\n", mid, upperLeft, upperRight, (int)depth, spee);
+	print_string(str);
+}
+
+void Rover::printFinish() {
+	uint8_t camData[camera.res_y];
+	char str[32];
+
+	camera.getCol(camera.res_x / 2 - 10, camData);
+
+	for (int i = 0; i < camera.res_y; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	camera.getCol(camera.res_x / 2 + 10, camData);
+
+	for (int i = 0; i < camera.res_y; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	int finishLeft = camera.findEdgeVer(-10, camera.res_y - 10, camera.res_y / 2);
+	int finishRight = camera.findEdgeVer(10, camera.res_y - 10, camera.res_y / 2);
+	sprintf(str, "%d,%d,\r\n", finishLeft, finishRight);
 	print_string(str);
 }
 
