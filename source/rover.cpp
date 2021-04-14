@@ -54,17 +54,18 @@ void leds_off()
 void Rover::setWheels() {
     point direction;
 
-    midLower = camera.getMid(midLower, bottomLine);
+    midLower = camera.getMid(midLower, lowerLine, lowerLeft, lowerRight);
 
     depth = camera.getDepth(0);
+	upperLine = depth - 60;
 
-    if (depth - 60 > midLower.y && false) {
+	midUpper = camera.getMid({0, 100}, upperLine, upperLeft, upperRight);
+
+    if (upperLine > lowerLine) {
         spee = true;
-        direction = midUpper = camera.getMid({0, 100}, depth - 60);
-        // pixy.setLamp(1, 1);
+        direction = midUpper;
     }
     else {
-        // pixy.setLamp(0, 0);
         spee = false;
         direction = midLower;
         direction.y -= 10;
@@ -140,6 +141,40 @@ void display_battery_level()
 	{
 		mLeds_Write(kMaskLed4, kLedOn);
 	}
+}
+
+void Rover::printDepth() {
+	uint8_t camData[camera.res_y];
+	char str[16];
+
+	camera.getCol(camera.res_x / 2, camData);
+
+	for (int i = 0; i < camera.res_y; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	point p = camera.point_to_pixel(0, depth);
+
+	sprintf(str, "%d,\r\n", (int)p.y);
+	print_string(str);
+}
+
+void Rover::printBoth() {
+	uint8_t camData[camera.res_x];
+	char str[32];
+	int mid;
+
+	camera.getRow(lowerLine, camData);
+
+	for (int i = 0; i < camera.res_x; i++) {
+		sprintf(str, "%d,", camData[i]);
+		print_string(str);
+	}
+
+	mid = (int)
+
+	sprintf("%d,%d,%d,", (int))
 }
 
 uint8_t get_switch_state()
