@@ -1,4 +1,4 @@
-#include "servo.h"
+#include "servo_module.h"
 
 void servoModule::setRotation(float in)
 {

@@ -28,17 +28,12 @@ extern "C"
 #include "Modules/mRS232.h"
 #include "Modules/mVL6180x.h"
 
-#include "Applications/gInput.h"
-#include "Applications/gCompute.h"
-#include "Applications/gOutput.h"
-
 #include "arm_math.h"
-#include "Utils/util.h"
 }
 
 #include "camera.h"
-#include "motor.h"
-#include "servo.h"
+#include "engine_module.h"
+#include "servo_module.h"
 
 #define MAX_SPEED 0.60
 #define MIN_SPEED 0.47

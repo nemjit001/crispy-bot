@@ -82,9 +82,8 @@
 #include "Pixy2Line.h"
 #include "Pixy2Video.h"
 
+extern "C" {
 #include "Modules/mDelay.h"
-extern "C"
-{
 #include "Interfaces/iSpi.h"
 #include "Interfaces/iDio.h"
 #include "Modules/mSpi.h"

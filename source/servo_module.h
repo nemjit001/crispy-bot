@@ -4,13 +4,12 @@
 extern "C"
 {
 #include "Modules/mTimer.h"
+// #include "Utils/util.h"
 }
-
-#include "Utils/util.h"
 
 #define SERVO_RANGE 0.7
 #define SERVO_CENTER -0.14
-#define STEERING_RANGE TO_RADIANS(84)
+#define STEERING_RANGE 0.735
 
 typedef enum
 {

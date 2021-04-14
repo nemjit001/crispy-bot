@@ -1,7 +1,6 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#include "Utils/util.h"
 #include "Pixy/Pixy2SPI_SS.h"
 
 #define CAM_HEIGHT 39.5         // In cm, lens tot grond

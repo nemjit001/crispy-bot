@@ -37,7 +37,6 @@
 //
 
 #include "Modules/mDelay.h"
-#include "Utils/util.h"
 
 #ifndef _PIXY2VIDEO_H
 #define _PIXY2VIDEO_H
@@ -87,7 +86,7 @@ int8_t Pixy2Video<LinkType>::getRGB(uint16_t x, uint16_t y, uint8_t *c, bool sat
       // deal with program changing
       else if (m_pixy->m_type == PIXY_TYPE_RESPONSE_ERROR && (int8_t)m_pixy->m_buf[0] == PIXY_RESULT_PROG_CHANGING)
       {
-        print_string("Error\n\r");
+//        print_string("Error\n\r");
         usleep(500); // don't be a drag
         continue;
       }
