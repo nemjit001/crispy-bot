@@ -35,8 +35,8 @@ extern "C"
 #include "engine_module.h"
 #include "servo_module.h"
 
-#define MAX_SPEED 0.50
-#define MIN_SPEED 0.43
+#define MAX_SPEED 0.45
+#define MIN_SPEED 0.45
 
 class Rover
 {
@@ -73,6 +73,7 @@ public:
     void step(bool motors) {
 		setWheels();
         if (mSwitch_ReadSwitch(kSw3)) printFinish();
+        checkFinish();
         
         if (mSwitch_ReadSwitch(kSw2)) setBrakes();
         if (mSwitch_ReadSwitch(kSw1)) setSpeed();
