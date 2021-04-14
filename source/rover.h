@@ -35,7 +35,11 @@ extern "C"
 #include "engine_module.h"
 #include "servo_module.h"
 
+<<<<<<< HEAD
 #define MAX_SPEED 0.5
+=======
+#define MAX_SPEED 0.50
+>>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
 #define MIN_SPEED 0.43
 
 class Rover
@@ -46,7 +50,7 @@ private:
     engineModule engine = engineModule();
 
     bool finished = false, spee = false, braking = false, canBrake = true;
-    int bottomLine, frameCounter;
+    int lowerLine, upperLine, frameCounter = 0, lowerLeft, lowerRight, upperLeft, upperRight;
     point midLower = {0, 100}, midUpper = {0, 100};
     float angle, depth;
 
@@ -54,7 +58,12 @@ private:
     void setBrakes();
     void setSpeed();
     void setWheels();
+<<<<<<< HEAD
     void checkFinish();
+=======
+    void printDepth();
+    void printBoth();
+>>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
 
 public:
     Rover() {
@@ -63,21 +72,24 @@ public:
 
         midLower = midUpper = {0, 100};
 
-        point p = camera.point_to_pixel(0, 50);
-        bottomLine = p.y;
-        point p2 = camera.pixel_to_point(p.x, p.y);
-
-        frameCounter = 0;
+        lowerLine = camera.point_to_pixel(0, 50).y;
     }
 
     void step(bool motors) {
 		setWheels();
+        if (mSwitch_ReadSwitch(kSw3)) printDepth();
         
+<<<<<<< HEAD
         if (motors) {
             //setBrakes();
             checkFinish();
             setSpeed();
         }
+=======
+        if (mSwitch_ReadSwitch(kSw2)) setBrakes();
+        if (mSwitch_ReadSwitch(kSw1)) setSpeed();
+
+>>>>>>> 45143d837d99fa1788cb588e69db0261fec00f2b
         else {
             engine.setSpeed(0, 0);
         }
@@ -90,7 +102,7 @@ public:
     //     int object = false;
     //     uint8_t c1, c2;
 
-    //     dist1 = getDepth(res_x / 2 - lineOffset, res_y - 1);
+    //           bottomLine = p.y;  dist1 = getDepth(res_x / 2 - lineOffset, res_y - 1);
     //     p1 = pixel_to_point(res_x / 2 - lineOffset, dist1);
     //     dist2 = getDepth(res_x / 2 + lineOffset, res_y - 1);
     //     p2 = pixel_to_point(res_x / 2 + lineOffset, dist2);

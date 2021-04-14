@@ -39,6 +39,14 @@ void Camera::setLamp(bool on){
 	else pixy.setLamp(0,0);
 }
 
+point Camera::pixel_to_point(point p) {
+	return pixel_to_point(p.x, p.y);
+}
+
+point Camera::point_to_pixel(point p) {
+	return point_to_pixel(p.x, p.y);
+}
+
 int Camera::findEdgeHor(int y, int start, int stop) {
     int diff = 0, i = start;
     int sign = (start < stop) ? 1 : -1;
@@ -66,10 +74,10 @@ int Camera::findEdgeVer(int x, int start, int stop) {
 	uint8_t c1, c2;
     int sign = (start < stop) ? 1 : -1;
 
-	pixy.video.getRGB(x, i, &c1, 0);
+	pixy.video.getRGB(res_x / 2 + x, i, &c1, 0);
 
-    while (i != stop) {
-		pixy.video.getRGB(x, i + sign, &c2, 0);
+    while (i * sign < stop) {
+		pixy.video.getRGB(res_x / 2 + x, i + sign, &c2, 0);
 
         diff = c1 - c2;
         if (diff >= THRESHOLD) {
@@ -122,7 +130,25 @@ point Camera::getMid(point prev, int y) {
 }
 
 float Camera::getDepth(int offset) {
-    int y = findEdgeVer(offset, res_y - 1, 0);
+    int y = findEdgeVer(offset, res_y - 10, 0);
 
 	return pixel_to_point(res_x / 2 + offset, y).y;
+}
+
+void Camera::getRow(int y, uint8_t camData[]) {
+	uint8_t c;
+
+	for (int x = 0; x < res_x; x++) {
+		pixy.video.getRGB(x, y, &c, false);
+		camData[x] = c;
+	}
+}
+
+void Camera::getCol(int x, uint8_t camData[]) {
+	uint8_t c;
+
+	for (int y = 0; y < res_y; y++) {
+		pixy.video.getRGB(x, y, &c, false);
+		camData[y] = c;
+	}
 }

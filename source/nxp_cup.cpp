@@ -58,7 +58,7 @@ int main(void)
 		// 	break;
 		// }
 
-		car.step(true);
+		car.step(false);
 	}
 
 	return 0;
