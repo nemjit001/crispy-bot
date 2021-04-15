@@ -35,8 +35,8 @@ extern "C"
 #include "engine_module.h"
 #include "servo_module.h"
 
-#define MAX_SPEED 0.43
-#define MIN_SPEED 0.43
+// #define MAX_SPEED 0.40
+// #define MIN_SPEED 0.40
 
 class Rover
 {
@@ -48,7 +48,7 @@ private:
     bool finished = false, spee = false, braking = false, canBrake = true;
     int lowerLine, upperLine, frameCounter = 0, lowerLeft, lowerRight, upperLeft, upperRight;
     point midLower = {0, 100}, midUpper = {0, 100};
-    float angle, depth;
+    float angle, depth, maxSpeed, minSpeed;
 
     void engine_kpod();
     void setBrakes();
@@ -67,14 +67,25 @@ public:
 
         midLower = midUpper = {0, 100};
 
-        lowerLine = camera.point_to_pixel(0, 50).y;
+        // lowerLine = camera.point_to_pixel(0, 40).y;
+        lowerLine = camera.res_y - 30;
+
+        printf("lowerLine: %d\n", lowerLine);
     }
 
     void step(bool motors) {
 		setWheels();
-        if (mSwitch_ReadSwitch(kSw3)) printFinish();
-        checkFinish();
+        // if (mSwitch_ReadSwitch(kSw3)) printBoth();
+        // checkFinish();
         
+        if (mSwitch_ReadSwitch(kSw4)) {
+            minSpeed = 0.45;
+            maxSpeed = 0.60;
+        }
+        else {
+            minSpeed = 0.43;
+            maxSpeed = 0.43;
+        }
         if (mSwitch_ReadSwitch(kSw2)) setBrakes();
         if (mSwitch_ReadSwitch(kSw1)) setSpeed();
 

@@ -53,6 +53,7 @@ void leds_off()
 
 void Rover::setWheels() {
     point direction;
+	float mul = 1;
 
     midLower = camera.getMid(midLower, lowerLine, lowerLeft, lowerRight);
 
@@ -64,30 +65,34 @@ void Rover::setWheels() {
     if (upperLine < lowerLine) {
         spee = true;
         direction = midUpper;
+		camera.setLamp(true);
+		// mul = 0.5;
     }
     else {
         spee = false;
         direction = midLower;
-        direction.y -= 15;
+		// mul = 1;
+        direction.y -= 25;
+		camera.setLamp(false);
     }
 
     angle = atan2(direction.x, direction.y);
 
-    servo.setServo(angle);
+    servo.setServo(angle * mul);
 }
 
 void Rover::setSpeed() {
 	float speed1, speed2;
 
-	if (depth > 100){
-		speed1 = MAX_SPEED;
-		speed2 = MAX_SPEED;
+	if (depth > 150){
+		speed1 = maxSpeed;
+		speed2 = maxSpeed;
 	} else if (braking) {
 		speed1 = speed2 = 0;
 	}
 	else{
-		speed1 = MIN_SPEED;
-		speed2 = MIN_SPEED;
+		speed1 = minSpeed;
+		speed2 = minSpeed;
 
 		if (angle < TO_RADIANS(-15)) {
             speed2 += 0.10; speed1 -= 0.05;
@@ -101,10 +106,10 @@ void Rover::setSpeed() {
 }
 
 void Rover::setBrakes() {
-    if (depth > 200) canBrake = true;
+    if (depth > 300) canBrake = true;
 
     if (!braking) {
-        if (depth < 100 && canBrake) {
+        if (depth < 150 && canBrake) {
             braking = true;
             canBrake = false;
         }

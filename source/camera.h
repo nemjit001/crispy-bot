@@ -6,7 +6,7 @@
 #define CAM_HEIGHT 39.5         // In cm, lens tot grond
 #define LINE_DIST 74.0          // In cm, wiel tot lijn
 #define LENS_WHEELS_DIST 9.0    // In cm, lens tot wiel, horizontaal
-#define THRESHOLD 15
+#define THRESHOLD 10
 #define CAM_ANGLE atan2(LINE_DIST + LENS_WHEELS_DIST, CAM_HEIGHT)
 
 #define FOV_X TO_RADIANS(68)

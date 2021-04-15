@@ -55,7 +55,7 @@ int Camera::findEdgeHor(int y, int start, int stop) {
 	pixy.video.getRGB(i, y, &c1, false);
 
     while (i * sign < stop) {
-		pixy.video.getRGB(i + sign, y, &c2, false);
+		pixy.video.getRGB(i + sign * 2, y, &c2, false);
 
         diff = c1 - c2;
         if (diff >= THRESHOLD) {
@@ -63,7 +63,7 @@ int Camera::findEdgeHor(int y, int start, int stop) {
         }
 
 		c1 = c2;
-        i += sign;
+        i += sign * 2;
     }
 
     return -1;
@@ -92,7 +92,7 @@ int Camera::findEdgeVer(int x, int start, int stop) {
 }
 
 point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
-	point p;
+	point p, p1;
 	float mid;
 
 	mid = point_to_pixel(prev.x, prev.y).x;
@@ -106,10 +106,20 @@ point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 	if (firstEdge == -1 && secEdge != -1) {
 		p = pixel_to_point(secEdge, y);
 		p.x -= 25;
+		p1 = point_to_pixel(p);
+		if (getGrayScale(p1.x, p1.y) < 230) {
+			p = pixel_to_point(firstEdge, y);
+			p.x += 25;
+		}
 	}
 	else if (secEdge == -1 && firstEdge != -1) {
 		p = pixel_to_point(firstEdge, y);
 		p.x += 25;
+		p1 = point_to_pixel(p);
+		if (getGrayScale(p1.x, p1.y) < 230) {
+			p = pixel_to_point(secEdge, y);
+			p.x -= 25;
+		}
 	}
 	else if (firstEdge == -1 && secEdge == -1) {
 		p = pixel_to_point(res_x / 2, y);
