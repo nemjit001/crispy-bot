@@ -71,7 +71,7 @@ void Rover::setWheels() {
     else {
         spee = false;
         direction = midLower;
-		mul = 1.6;
+		mul = 1.2;
         // direction.y -= 20;
 		camera.setLamp(false);
     }
@@ -84,7 +84,7 @@ void Rover::setWheels() {
 void Rover::setSpeed() {
 	float speed1, speed2;
 
-	if (depth > 180) {
+	if (depth > 150) {
 		speed1 = maxSpeed;
 		speed2 = maxSpeed;
 	}
@@ -105,10 +105,10 @@ void Rover::setSpeed() {
 }
 
 void Rover::setBrakes() {
-    if (depth > 220) canBrake = true;
+    if (depth > 200) canBrake = true;
 
     if (!braking) {
-        if (depth < 180 && canBrake) {
+        if (depth < 150 && canBrake) {
             braking = true;
             canBrake = false;
         }
@@ -116,7 +116,7 @@ void Rover::setBrakes() {
     else {
         frameCounter++;
 
-        if (frameCounter == 3) {
+        if (frameCounter == 4) {
             braking = false;
             frameCounter = 0;
         }

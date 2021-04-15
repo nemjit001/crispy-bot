@@ -58,7 +58,7 @@ int Camera::findEdgeHor(int y, int start, int stop) {
 		pixy.video.getRGB(i + sign * 2, y, &c2, false);
 
         diff = c1 - c2;
-        if (diff >= THRESHOLD) {
+        if (diff >= THRESHOLD || c2 < 200) {
             return i;
         }
 

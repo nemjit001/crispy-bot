@@ -75,7 +75,7 @@ public:
 
     void step(bool motors) {
 		setWheels();
-        // if (mSwitch_ReadSwitch(kSw3)) printBoth();
+        if (mSwitch_ReadSwitch(kSw3)) printBoth();
         // checkFinish();
         
         if (mSwitch_ReadSwitch(kSw4)) {
