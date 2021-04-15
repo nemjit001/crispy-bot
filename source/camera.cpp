@@ -80,7 +80,7 @@ int Camera::findEdgeVer(int x, int start, int stop) {
 		pixy.video.getRGB(res_x / 2 + x, i + sign, &c2, false);
 
         diff = c1 - c2;
-        if (diff >= THRESHOLD) {
+        if (diff >= THRESHOLD || c2 < 200) {
             return i;
         }
 		
@@ -138,7 +138,7 @@ point Camera::getMid(point prev, int y) {
 }
 
 float Camera::getDepth(int offset) {
-    int y = findEdgeVer(offset, res_y, 0);
+    int y = findEdgeVer(offset, res_y - 10, 0);
 
 	return pixel_to_point(res_x / 2 + offset, y).y;
 }

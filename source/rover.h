@@ -75,16 +75,16 @@ public:
 
     void step(bool motors) {
 		setWheels();
-        if (mSwitch_ReadSwitch(kSw3)) printBoth();
+        // if (mSwitch_ReadSwitch(kSw3)) printBoth();
         // checkFinish();
         
         if (mSwitch_ReadSwitch(kSw4)) {
-            minSpeed = 0.45;
-            maxSpeed = 0.60;
+            minSpeed = 0.50;
+            maxSpeed = 0.70;
         }
         else {
-            minSpeed = 0.43;
-            maxSpeed = 0.43;
+            minSpeed = 0.45;
+            maxSpeed = 0.60;
         }
         if (mSwitch_ReadSwitch(kSw2)) setBrakes();
         if (mSwitch_ReadSwitch(kSw1)) setSpeed();

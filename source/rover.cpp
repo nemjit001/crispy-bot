@@ -58,11 +58,11 @@ void Rover::setWheels() {
     midLower = camera.getMid(midLower, lowerLine, lowerLeft, lowerRight);
 
     depth = camera.getDepth(0);
-	upperLine = camera.point_to_pixel(0, depth - 100).y;
+	upperLine = camera.point_to_pixel(0, depth - 60).y;
 
 	midUpper = camera.getMid({0, 100}, upperLine, upperLeft, upperRight);
 
-    if (upperLine < lowerLine) {
+    if (depth > 150) {
         spee = true;
         direction = midUpper;
 		camera.setLamp(true);
@@ -71,8 +71,8 @@ void Rover::setWheels() {
     else {
         spee = false;
         direction = midLower;
-		mul = 1;
-        direction.y -= 20;
+		mul = 1.6;
+        // direction.y -= 20;
 		camera.setLamp(false);
     }
 
@@ -84,32 +84,31 @@ void Rover::setWheels() {
 void Rover::setSpeed() {
 	float speed1, speed2;
 
-	if (depth > 150) {
+	if (depth > 180) {
 		speed1 = maxSpeed;
 		speed2 = maxSpeed;
-	} else if (braking) {
-		speed1 = speed2 = 0;
 	}
+	else if (braking) speed1 = speed2 = 0;
 	else {
 		speed1 = minSpeed;
 		speed2 = minSpeed;
 
 		if (angle < TO_RADIANS(-15)) {
-            speed2 += 0.10; speed1 -= 0.05;
-        }
+			speed2 += 0.05; speed1 -= 0.03;
+		}
 		else if (angle > TO_RADIANS(15)) {
-            speed1 += 0.10; speed2 -= 0.05;
-        }
+			speed1 += 0.05; speed2 -= 0.03;
+		}
 	}
 
 	engine.setSpeed(-speed1, -speed2);
 }
 
 void Rover::setBrakes() {
-    if (depth > 200) canBrake = true;
+    if (depth > 220) canBrake = true;
 
     if (!braking) {
-        if (depth < 150 && canBrake) {
+        if (depth < 180 && canBrake) {
             braking = true;
             canBrake = false;
         }
@@ -117,7 +116,7 @@ void Rover::setBrakes() {
     else {
         frameCounter++;
 
-        if (frameCounter == 5) {
+        if (frameCounter == 3) {
             braking = false;
             frameCounter = 0;
         }
