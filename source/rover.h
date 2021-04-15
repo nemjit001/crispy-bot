@@ -67,15 +67,15 @@ public:
 
         midLower = midUpper = {0, 100};
 
-        // lowerLine = camera.point_to_pixel(0, 40).y;
-        lowerLine = camera.res_y - 30;
+        lowerLine = camera.point_to_pixel(0, 50).y;
+        // lowerLine = camera.res_y - 30;
 
         printf("lowerLine: %d\n", lowerLine);
     }
 
     void step(bool motors) {
 		setWheels();
-        // if (mSwitch_ReadSwitch(kSw3)) printBoth();
+        if (mSwitch_ReadSwitch(kSw3)) printBoth();
         // checkFinish();
         
         if (mSwitch_ReadSwitch(kSw4)) {

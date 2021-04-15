@@ -107,7 +107,7 @@ point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 		p = pixel_to_point(secEdge, y);
 		p.x -= 25;
 		p1 = point_to_pixel(p);
-		if (getGrayScale(p1.x, p1.y) < 230) {
+		if (getGrayScale(p1.x, p1.y) < 150) {
 			p = pixel_to_point(firstEdge, y);
 			p.x += 25;
 		}
@@ -116,7 +116,7 @@ point Camera::getMid(point prev, int y, int &firstEdge, int &secEdge) {
 		p = pixel_to_point(firstEdge, y);
 		p.x += 25;
 		p1 = point_to_pixel(p);
-		if (getGrayScale(p1.x, p1.y) < 230) {
+		if (getGrayScale(p1.x, p1.y) < 150) {
 			p = pixel_to_point(secEdge, y);
 			p.x -= 25;
 		}
